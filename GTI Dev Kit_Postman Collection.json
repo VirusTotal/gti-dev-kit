@@ -1,0 +1,1428 @@
+{
+	"info": {
+		"_postman_id": "506ae987-b7ad-4974-980d-fdbb6e531917",
+		"name": "GTI Dev Kit",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37645188",
+		"_collection_link": "https://lively-station-794192.postman.co/workspace/GTI-Dev-Kit~8bd0e31a-9afa-45a6-9583-68b6fcd5ef52/collection/37645188-506ae987-b7ad-4974-980d-fdbb6e531917?action=share&source=collection_link&creator=37645188"
+	},
+	"item": [
+		{
+			"name": "Automatic and Manual Enrichment",
+			"item": [
+				{
+					"name": "IP Address",
+					"item": [
+						{
+							"name": "Enrich IP Address",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/ip_addresses/{{ip_address}}",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"ip_addresses",
+										"{{ip_address}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Enrich IP Address With Relationship",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/ip_addresses/{{ip_address}}?relationships={{relationships}},resolutions",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"ip_addresses",
+										"{{ip_address}}"
+									],
+									"query": [
+										{
+											"key": "relationships",
+											"value": "{{relationships}},resolutions"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Domain",
+					"item": [
+						{
+							"name": "Enrich Domain",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/domains/{{domain}}",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"domains",
+										"{{domain}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Enrich Domain With Relationship",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/domains/{{domain}}?relationships={{relationships}},resolutions",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"domains",
+										"{{domain}}"
+									],
+									"query": [
+										{
+											"key": "relationships",
+											"value": "{{relationships}},resolutions"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "File",
+					"item": [
+						{
+							"name": "Enrich File",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/files/{{file_hash}}",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"files",
+										"{{file_hash}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Enrich File With Relationship",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/files/{{file_hash}}?relationships={{relationships}}",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"files",
+										"{{file_hash}}"
+									],
+									"query": [
+										{
+											"key": "relationships",
+											"value": "{{relationships}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "File Mitre Attack Data",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/files/{{file_hash}}/behaviour_mitre_trees",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"files",
+										"{{file_hash}}",
+										"behaviour_mitre_trees"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "File Sandbox Behaviour",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/files/{{file_hash}}/behaviours",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"files",
+										"{{file_hash}}",
+										"behaviours"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "URL",
+					"item": [
+						{
+							"name": "Enrich URL",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/urls/{{url}}",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"urls",
+										"{{url}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Enrich URL With Relationship",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/urls/{{url}}?relationships={{relationships}}",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"urls",
+										"{{url}}"
+									],
+									"query": [
+										{
+											"key": "relationships",
+											"value": "{{relationships}}"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "GTI Widget",
+			"item": [
+				{
+					"name": "IP Address Widget",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-tool",
+								"value": "{{product_name}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/widget/url?query={{ip_address}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"widget",
+								"url"
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": "{{ip_address}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Domain Widget",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-tool",
+								"value": "{{product_name}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/widget/url?query={{domain}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"widget",
+								"url"
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": "{{domain}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "URL Widget",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-tool",
+								"value": "{{product_name}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/widget/url?query={{url}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"widget",
+								"url"
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": "{{url}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "File Widget",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-tool",
+								"value": "{{product_name}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/widget/url?query={{file_hash}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"widget",
+								"url"
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": "{{file_hash}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "File and URL Scanning",
+			"item": [
+				{
+					"name": "Private Scanning",
+					"item": [
+						{
+							"name": "File",
+							"item": [
+								{
+									"name": "Scan Private File",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-tool",
+												"value": "{{product_name}}",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "multipart/form-data",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "file",
+													"type": "file",
+													"src": "postman-cloud:///1f076a0d-6257-47b0-aba4-4235e01f18e2"
+												}
+											]
+										},
+										"url": {
+											"raw": "{{baseURL}}/private/files",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"private",
+												"files"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Private Analysis",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-tool",
+												"value": "{{product_name}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseURL}}/private/analyses/{{private_scan_analysis_id}}",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"private",
+												"analyses",
+												"{{private_scan_analysis_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Private File Report",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-tool",
+												"value": "{{product_name}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseURL}}/private/files/{{scanned_private_file_hash}}",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"private",
+												"files",
+												"{{scanned_private_file_hash}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "URL",
+							"item": [
+								{
+									"name": "Scan Private URL",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-tool",
+												"value": "{{product_name}}",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/vnd.api+json",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "url",
+													"value": "https://www.irctc.co.in",
+													"type": "text"
+												}
+											]
+										},
+										"url": {
+											"raw": "{{baseURL}}/private/urls",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"private",
+												"urls"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Private Analysis",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-tool",
+												"value": "{{product_name}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseURL}}/private/analyses/{{private_scan_analysis_id}}",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"private",
+												"analyses",
+												"{{private_scan_analysis_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Private URL Report",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-tool",
+												"value": "{{product_name}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseURL}}/private/urls/{{scanned_private_url_id}}",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"private",
+												"urls",
+												"{{scanned_private_url_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Public Scanning",
+					"item": [
+						{
+							"name": "File",
+							"item": [
+								{
+									"name": "Scan Public File",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-tool",
+												"value": "{{product_name}}",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "multipart/form-data",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "file",
+													"type": "file",
+													"src": "postman-cloud:///1f076a0d-6257-47b0-aba4-4235e01f18e2"
+												}
+											]
+										},
+										"url": {
+											"raw": "{{baseURL}}/files",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"files"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Public Analysis",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-too",
+												"value": "{{product_name}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseURL}}/analyses/{{public_scan_analysis_id}}",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"analyses",
+												"{{public_scan_analysis_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Public File Report",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-too",
+												"value": "{{product_name}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseURL}}/files/{{scanned_public_file_hash}}",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"files",
+												"{{scanned_public_file_hash}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "URL",
+							"item": [
+								{
+									"name": "Scan Public URL",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-tool",
+												"value": "{{product_name}}",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/vnd.api+json",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/x-www-form-urlencoded",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{
+													"key": "url",
+													"value": "https://www.irctc.co.in",
+													"type": "text"
+												}
+											]
+										},
+										"url": {
+											"raw": "{{baseURL}}/urls",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"urls"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Public Analysis",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-too",
+												"value": "{{product_name}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseURL}}/analyses/{{public_scan_analysis_id}}",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"analyses",
+												"{{public_scan_analysis_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Public URL Report",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-too",
+												"value": "{{product_name}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseURL}}/urls/{{scanned_public_url_id}}",
+											"host": [
+												"{{baseURL}}"
+											],
+											"path": [
+												"urls",
+												"{{scanned_public_url_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Vulnerability Intelligence",
+			"item": [
+				{
+					"name": "Get Vulnerabilities",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-tool",
+								"value": "{{product_name}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/collections?filter=collection_type:vulnerability",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"collections"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "collection_type:vulnerability"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Threat List and IOC Steam Ingestion",
+			"item": [
+				{
+					"name": "Threat List",
+					"item": [
+						{
+							"name": "Ransomware",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/ransomware/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"ransomware",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Malicious Network Infrastructure",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/malicious-network-infrastructure/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"malicious-network-infrastructure",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Malware",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/malware/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"malware",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Threat Actor",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/threat-actor/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"threat-actor",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Daily Top Trending",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/trending/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"trending",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Mobile",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/mobile/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"mobile",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "OSX",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/osx/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"osx",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Linux",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/linux/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"linux",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Internet Of Things",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/iot/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"iot",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Cryptominers",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/cryptominer/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"cryptominer",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Phishing",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/phishing/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"phishing",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "First Stage Delivery Vectors",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/first-stage-delivery-vectors/latest?x-tool={{product_name}}",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"first-stage-delivery-vectors",
+										"latest"
+									],
+									"query": [
+										{
+											"key": "x-tool",
+											"value": "{{product_name}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Vulnerability Weaponization",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/vulnerability-weaponization/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"vulnerability-weaponization",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Infostealers",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/threat_lists/infostealer/latest?x-tool={{product_name}}",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"threat_lists",
+										"infostealer",
+										"latest"
+									],
+									"query": [
+										{
+											"key": "x-tool",
+											"value": "{{product_name}}"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "IOC Stream Notification",
+					"item": [
+						{
+							"name": "Get IOC Stream Notifications",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-tool",
+										"value": "{{product_name}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseURL}}/ioc_stream",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"ioc_stream"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "ASM Issues",
+			"item": [
+				{
+					"name": "Get ASM Issues",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-tool",
+								"value": "{{product_name}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/asm/search/issues/{{query_string}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"asm",
+								"search",
+								"issues",
+								"{{query_string}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "DTM Alerts",
+			"item": [
+				{
+					"name": "Get DTM Alerts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-tool",
+								"value": "{{product_name}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/dtm/alerts",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"dtm",
+								"alerts"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "{{gti_api_key}}",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "x-apikey",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://www.virustotal.com/api/v3",
+			"type": "default"
+		},
+		{
+			"key": "gti_api_key",
+			"value": "Enter Your GTI API KEY",
+			"type": "string"
+		},
+		{
+			"key": "ip_address",
+			"value": "ip_address",
+			"type": "default"
+		},
+		{
+			"key": "domain",
+			"value": "domain",
+			"type": "default"
+		},
+		{
+			"key": "product_name",
+			"value": "GoogleThreatIn",
+			"type": "string"
+		},
+		{
+			"key": "file_hash",
+			"value": "0078c8132fb99b4bccbb2e2429885a857d6a89534f74e23e6a12821abd2c3db2",
+			"type": "string"
+		},
+		{
+			"key": "url",
+			"value": "https://www.google.com/",
+			"type": "string"
+		},
+		{
+			"key": "relationships",
+			"value": "collections,malware_families,related_threat_actors,software_toolkits,campaigns,comments,reports,vulnerabilities",
+			"type": "string"
+		},
+		{
+			"key": "private_scan_analysis_id",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "scanned_private_url_id",
+			"value": "9337405ca21d71c5db26b9982aea01707c95a925c8ef99f5a42e7dd29dc06f3d",
+			"type": "default"
+		},
+		{
+			"key": "public_scan_analysis_id",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "scanned_private_file_hash",
+			"value": "f0de2e62ca270423aecf386b578668a3bcebd300f0bc794e667f6467d4792a3d",
+			"type": "default"
+		},
+		{
+			"key": "scanned_public_file_hash",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "scanned_public_url_id",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "query_string",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
