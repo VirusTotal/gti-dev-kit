@@ -270,7 +270,7 @@ def main():
     """Main function to handle URL scanning."""
 
     # Default URL for demonstration
-    url = "https://www.youtube.com/"
+    url = "https://chatgpt.com/c/689c11f4-770c-832b-9f9b-8336a2848efe"
     print(f"Using default URL: {url}")
 
     print(f"\nScanning URL: {url}")

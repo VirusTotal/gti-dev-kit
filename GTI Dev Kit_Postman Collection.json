@@ -2,9 +2,10 @@
 	"info": {
 		"_postman_id": "506ae987-b7ad-4974-980d-fdbb6e531917",
 		"name": "GTI Dev Kit",
+		"description": "This collection provides a comprehensive set of API endpoints for interacting with the Google Threat Intelligence (GTI) service, formerly known as VirusTotal. It includes tools for enriching indicators of compromise (IOCs) like IP addresses, domains, files, and URLs; scanning files and URLs in both private and public modes; retrieving threat lists, vulnerabilities, and IOC streams; and accessing specialized features like widgets, ASM issues, and DTM alerts. All requests are authenticated using an API key and support custom headers for tool identification. Use this collection to integrate GTI capabilities into security workflows, threat hunting, and automated analysis pipelines.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "37645188",
-		"_collection_link": "https://lively-station-794192.postman.co/workspace/GTI-Dev-Kit~8bd0e31a-9afa-45a6-9583-68b6fcd5ef52/collection/37645188-506ae987-b7ad-4974-980d-fdbb6e531917?action=share&source=collection_link&creator=37645188"
+		"_collection_link": "https://lively-station-794192.postman.co/workspace/8bd0e31a-9afa-45a6-9583-68b6fcd5ef52/collection/37645188-506ae987-b7ad-4974-980d-fdbb6e531917?action=share&source=collection_link&creator=37645188"
 	},
 	"item": [
 		{
@@ -67,7 +68,8 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"description": "This section focuses on IP address enrichment, providing requests to retrieve IP details or comprehensive data enriched with relationships such as resolutions, collections, malware families, threat actors, software toolkits, campaigns, comments, reports, and vulnerabilities.\n\nFor more information, refer to the official GTI documentation:\n\n- [IP Report](https://gtidocs.virustotal.com/reference/ip-info)\n    \n- [IP Relationships](https://gtidocs.virustotal.com/reference/ip-relationships)"
 				},
 				{
 					"name": "Domain",
@@ -126,7 +128,8 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"description": "This section focuses on domain enrichment, providing requests to retrieve domain details or comprehensive data enriched with relationships such as resolutions, collections, malware families, threat actors, software toolkits, campaigns, comments, reports, and vulnerabilities.\n\nFor more information, refer to the official GTI documentation:\n\n- [Domain Report](https://gtidocs.virustotal.com/reference/domain-info)\n    \n- [Domain Relationships](https://gtidocs.virustotal.com/reference/domains-relationships)."
 				},
 				{
 					"name": "File",
@@ -235,7 +238,8 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"description": "This section focuses on file enrichment, providing requests to retrieve file details or comprehensive data enriched with relationships such as collections, malware families, threat actors, software toolkits, campaigns, comments, reports, and vulnerabilities.\n\nFor more information, refer to the official GTI documentation:\n\n- [File Report](https://gtidocs.virustotal.com/reference/file-info)\n    \n- [File Relationships](https://gtidocs.virustotal.com/reference/files-relationships)."
 				},
 				{
 					"name": "URL",
@@ -294,9 +298,11 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"description": "This section focuses on URL enrichment, providing requests to retrieve URLdetails or comprehensive data enriched with relationships such as collections, malware families, threat actors, software toolkits, campaigns, comments, reports, and vulnerabilities.\n\nFor more information, refer to the official GTI documentation:\n\n- [URL Report](https://gtidocs.virustotal.com/reference/url-info)\n    \n- [URL Relationships](https://gtidocs.virustotal.com/reference/urls-relationships)."
 				}
-			]
+			],
+			"description": "This section contains endpoints for enriching various IOC types IP addresses, domains, files, and URLs with comprehensive threat intelligence data. Enrichment can be performed automatically or manually, and includes additional relationship data such as resolutions, collections, malware families, threat actors, software toolkits, campaigns, comments, reports, and vulnerabilities. These endpoints provide detailed reputation, analysis, and contextual insights to help assess and understand potential threats."
 		},
 		{
 			"name": "GTI Widget",
@@ -421,7 +427,8 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "This section provides endpoints to generate widget URLs for quick visual summaries of IOCs. Widgets offer embeddable, interactive overviews of threat intelligence for IP addresses, domains, URLs, and files, suitable for dashboards or reports.\n\nFor more information, refer to the official GTI documentation:\n\n- [GTI Widget](https://docs.virustotal.com/reference/widget-overview)"
 		},
 		{
 			"name": "File and URL Scanning",
@@ -526,7 +533,8 @@
 									},
 									"response": []
 								}
-							]
+							],
+							"description": "Endpoints for privately scanning files: submit a file, check analysis status, and get the private report.\n\nFor more information, refer to the official GTI documentation:\n\n- [Private File Scan Documentation](https://gtidocs.virustotal.com/reference/upload-file-private-scanning)\n    \n- [Private File Analysis Documentation](https://gtidocs.virustotal.com/reference/private-analysis)\n    \n- [Private File Report Documentation](https://gtidocs.virustotal.com/reference/private-files-info)"
 						},
 						{
 							"name": "URL",
@@ -625,9 +633,11 @@
 									},
 									"response": []
 								}
-							]
+							],
+							"description": "Endpoints for privately scanning URLs: submit a URL, check analysis status, and get the private report.\n\nFor more information, refer to the official GTI documentation:\n\n- [Private URL Scan Documentation](https://gtidocs.virustotal.com/reference/private-scan-url)\n    \n- [Private URL Analysis Documentation](https://gtidocs.virustotal.com/reference/private-analysis)\n    \n- [Private URL Report Documentation](https://gtidocs.virustotal.com/reference/get-a-private-url-analysis-report)"
 						}
-					]
+					],
+					"description": "This section covers private scanning, where results are not shared publicly. It includes separate paths for files and URLs, with submission, status polling, and report retrieval."
 				},
 				{
 					"name": "Public Scanning",
@@ -726,7 +736,8 @@
 									},
 									"response": []
 								}
-							]
+							],
+							"description": "Endpoints for publicly scanning files: submit a file, check analysis status, and get the public report.\n\nFor more information, refer to the official GTI documentation:\n\n- [Public File Scan Documentation](https://gtidocs.virustotal.com/reference/files-scan)\n    \n- [Public File Analysis Documentation](https://gtidocs.virustotal.com/reference/analysis)\n    \n- [Public File Report Documentation](https://gtidocs.virustotal.com/reference/file-info)"
 						},
 						{
 							"name": "URL",
@@ -822,11 +833,14 @@
 									},
 									"response": []
 								}
-							]
+							],
+							"description": "Endpoints for publicly scanning URLs: submit a URL, check analysis status, and get the public report.\n\nFor more information, refer to the official GTI documentation:\n\n- [Public URL Scan Documentation](https://gtidocs.virustotal.com/reference/scan-url)\n    \n- [Public URL Analysis Documentation](https://gtidocs.virustotal.com/reference/analysis)\n    \n- [Public URL Report Documentation](https://gtidocs.virustotal.com/reference/url-info)"
 						}
-					]
+					],
+					"description": "This section handles public scanning, where results contribute to the community database. It mirrors private scanning but with public visibility."
 				}
-			]
+			],
+			"description": "This section includes endpoints for submitting files and URLs for scanning in either private (non-shared) or public (community-shared) modes. Scanning involves analysis for malware, phishing, or other threats, with follow-up requests to retrieve analysis status and reports."
 		},
 		{
 			"name": "Vulnerability Intelligence",
@@ -860,7 +874,8 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "This section provides access to vulnerability-related intelligence. It includes requests to fetch collections of vulnerabilities for tracking and mitigation purposes.\n\nFor more information, refer to the official GTI documentation:\n\n- [List Vulnerability](https://gtidocs.virustotal.com/reference/list-vulnerabilities)"
 		},
 		{
 			"name": "Threat List and IOC Steam Ingestion",
@@ -1218,7 +1233,8 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"description": "This section contains requests to download the latest threat lists for specific threat types, such as ransomware, malware families, or platform-specific threats (e.g., mobile, Linux). Each list provides IOCs like file, IPs, URL and domains.\n\nFor more information, refer to the official GTI documentation:\n\n- [Threat List](https://gtidocs.virustotal.com/reference/get-latest-threat-list)"
 				},
 				{
 					"name": "IOC Stream Notification",
@@ -1246,9 +1262,11 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"description": "This section includes endpoints for receiving notifications from the IOC stream, enabling real-time ingestion of new indicators for automated alerting and response.\n\nFor more information, refer to the official GTI documentation:\n\n- [IOC Stream Notification](https://gtidocs.virustotal.com/reference/get-objects-from-the-ioc-stream)"
 				}
-			]
+			],
+			"description": "This section aggregates endpoints for retrieving curated threat lists across various categories (e.g., ransomware, malware) and ingesting real-time IOC streams. Use these for proactive threat feed integration and monitoring emerging threats."
 		},
 		{
 			"name": "ASM Issues",
@@ -1279,7 +1297,8 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "This section focuses on Attack Surface Management (ASM) issues. It provides search endpoints to query and retrieve details on potential vulnerabilities or misconfigurations in an organization's external attack surface.\n\nFor more information, refer to the official GTI documentation:\n\n- [ASM Issues](https://gtidocs.virustotal.com/reference/get_search-issues-search-string)"
 		},
 		{
 			"name": "DTM Alerts",
@@ -1308,7 +1327,8 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "This section handles Digital Threat Management (DTM) alerts. Use these endpoints to fetch alerts related to digital risks, such as brand impersonation, phishing campaigns, or other online threats targeting your organization.\n\nFor more information, refer to the official GTI documentation:\n\n- [DTM Alerts](https://gtidocs.virustotal.com/reference/get-alerts)"
 		}
 	],
 	"auth": {
@@ -1360,6 +1380,11 @@
 			"type": "string"
 		},
 		{
+			"key": "product_name",
+			"value": "Enter Your Product Name",
+			"type": "string"
+		},
+		{
 			"key": "ip_address",
 			"value": "ip_address",
 			"type": "default"
@@ -1368,11 +1393,6 @@
 			"key": "domain",
 			"value": "domain",
 			"type": "default"
-		},
-		{
-			"key": "product_name",
-			"value": "GoogleThreatIn",
-			"type": "string"
 		},
 		{
 			"key": "file_hash",
