@@ -130,7 +130,7 @@ def print_asm_results(response: Dict, max_display: int = 3) -> str:
             print(f"Error searching ASM issues: {response.get('error', 'Unknown error')}")
             if response.get('should_retry'):
                 print("Note: This request might succeed if retried later.")
-            return data.get('result', {}).get('next_page_token', "")
+            return response.get("data",{}).get('result', {}).get('next_page_token', "")
 
         data = response.get('data', {})
         hits = data.get('result', {}).get('hits', [])
@@ -138,7 +138,8 @@ def print_asm_results(response: Dict, max_display: int = 3) -> str:
             print("No ASM issues found matching the query.")
             return True
     
-        print(f"Found {len(hits)} ASM issues (first 3):\n{json.dumps(hits[:max_display], indent=2)}")
+        print(f"Found {len(hits)} ASM issues (first {max_display}):")
+        print(json.dumps(hits[:max_display], indent=2))
         return data.get('result', {}).get('next_page_token', "")
     except Exception as e:
         print(f"Error formatting results: {str(e)}")

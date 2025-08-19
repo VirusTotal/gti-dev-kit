@@ -136,7 +136,7 @@ def print_dtm_results(response: Dict, max_display: int = 3) -> bool:
             return True
     
         print(f"\nFound {len(alerts)} DTM alerts:")
-        print(f"Displaying (first 3) alerts:\n{json.dumps(alerts[:3], indent=2)}")
+        print(f"Displaying (first {max_display}) alerts:\n{json.dumps(alerts[:3], indent=2)}")
         return True
     except Exception as e:
         print(f"Error formatting results: {str(e)}")

@@ -139,7 +139,8 @@ def print_asm_results(response: Dict, max_display: int = 3) -> bool:
             print("No ASM issues found matching the query.")
             return True
     
-        print(f"Found {len(hits)} ASM issues (first 3):\n{json.dumps(hits[:max_display], indent=2)}")
+        print(f"Found {len(hits)} ASM issues (first {max_display}):")
+        print(json.dumps(hits[:max_display], indent=2))
         return True
     except Exception as e:
         print(f"Error formatting results: {str(e)}")

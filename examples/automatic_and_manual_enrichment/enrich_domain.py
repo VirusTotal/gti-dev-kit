@@ -175,7 +175,7 @@ def print_domain_report(domain_report, domain):
     except Exception as e:
         print(f"Error processing report for {domain}: {str(e)}")
 
-if __name__ == "__main__":
+def main():
     domain = "www.google.com"  # The domain to analyze
     print(f"\nStarting analysis for: {domain}")
     
@@ -187,3 +187,6 @@ if __name__ == "__main__":
         domain_report = get_domain_report(domain)
 
     print_domain_report(domain_report, domain)
+
+if __name__ == "__main__":
+    main()

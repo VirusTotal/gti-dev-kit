@@ -66,4 +66,3 @@ The `make_api_request` function handles various HTTP status codes consistently a
 | **Invalid URL (`scan_url.py`)** | `Bad request - invalid URL or parameters` | - Ensure URL is valid (e.g., `https://www.youtube.com/`).<br>- Check `submit_url_for_scanning` payload formatting.<br>- Test with a simple URL. |
 | **No Analysis ID/URL ID** | `Error: No analysis ID received` or `Error: No URL ID received` | - Log raw response from `submit_url_for_scanning` or `poll_analysis_status`.<br>- Check API key permissions for private scanning endpoints.<br>- Verify endpoint paths in [GTI Documentation](https://gtidocs.virustotal.com/reference/api-overview). |
 
----
