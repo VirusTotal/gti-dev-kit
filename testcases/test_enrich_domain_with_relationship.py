@@ -12,7 +12,6 @@ from examples.automatic_and_manual_enrichment.enrich_domain_with_relationship im
     BASE_URL,
     PARAMS,
 )
-
 from testcases.constants import DOMAIN, ENRICH_DOMAIN_RELATIONSHIP_API_RESPONSE
 
 MOCK_CACHE_FILE = os.path.join(CACHE_DIR, f"domain_{DOMAIN}_relationships_cache.json")
@@ -126,6 +125,45 @@ def test_make_api_request_500_server_error(mock_requests_get):
     assert result["error"] == "Server error 500."
     assert result["status_code"] == 500
     assert result["should_retry"] is True
+
+
+def test_make_api_request_403_forbidden(mock_requests_get):
+    """Test API request with 403 Forbidden."""
+    mock_response = MagicMock(status_code=403)
+    mock_requests_get.return_value = mock_response
+
+    result = make_api_request(f"{BASE_URL}/domains/{DOMAIN}", params=PARAMS)
+
+    assert result["success"] is False
+    assert result["error"] == "Forbidden - insufficient permissions."
+    assert result["status_code"] == 403
+    assert result["should_retry"] is False
+
+
+def test_make_api_request_404_not_found(mock_requests_get):
+    """Test API request with 404 Not Found."""
+    mock_response = MagicMock(status_code=404)
+    mock_requests_get.return_value = mock_response
+
+    result = make_api_request(f"{BASE_URL}/domains/{DOMAIN}", params=PARAMS)
+
+    assert result["success"] is False
+    assert result["error"] == "Domain not found."
+    assert result["status_code"] == 404
+    assert result["should_retry"] is False
+
+
+def test_make_api_request_unexpected_http_status(mock_requests_get):
+    """Test API request with 500 Server Error."""
+    mock_response = MagicMock(status_code=900)
+    mock_requests_get.return_value = mock_response
+
+    result = make_api_request(f"{BASE_URL}/domains/{DOMAIN}", params=PARAMS)
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected status code: 900."
+    assert result["status_code"] == 900
+    assert result["should_retry"] is False
 
 
 def test_make_api_request_timeout(mock_requests_get):

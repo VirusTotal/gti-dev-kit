@@ -154,6 +154,19 @@ def test_make_api_request_500_server_error(mock_requests_get):
     assert result["should_retry"] is True
 
 
+def test_make_api_request_unexpected_http_status(mock_requests_get):
+    """Test API request with 500 Server Error."""
+    mock_response = MagicMock(status_code=900)
+    mock_requests_get.return_value = mock_response
+
+    result = make_api_request(f"{BASE_URL}/ip_addresses/{IP_ADDRESS}", params=PARAMS)
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected status code: 900."
+    assert result["status_code"] == 900
+    assert result["should_retry"] is False
+
+
 def test_make_api_request_timeout(mock_requests_get):
     """Test API request with timeout."""
     mock_requests_get.side_effect = requests.exceptions.Timeout

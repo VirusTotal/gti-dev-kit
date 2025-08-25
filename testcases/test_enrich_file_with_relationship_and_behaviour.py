@@ -13,6 +13,7 @@ from examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_
     print_relationships,
     print_mitre_data,
     print_sandbox_behaviours,
+    main,
     CACHE_DIR,
     BASE_URL,
     PARAMS,
@@ -182,6 +183,19 @@ def test_make_api_request_500_server_error(mock_requests_get):
     assert result["error"] == "Server error 500."
     assert result["status_code"] == 500
     assert result["should_retry"] is True
+
+
+def test_make_api_request_unexpected_http_status(mock_requests_get):
+    """Test API request with 500 Server Error."""
+    mock_response = MagicMock(status_code=900)
+    mock_requests_get.return_value = mock_response
+
+    result = make_api_request(f"{BASE_URL}/files/{RELATIONSHIP_FILE_HASH}")
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected status code: 900."
+    assert result["status_code"] == 900
+    assert result["should_retry"] is False
 
 
 def test_make_api_request_timeout(mock_requests_get):
@@ -475,6 +489,179 @@ def test_print_relationships_no_relationships(capsys):
         f"No relationships found for file hash: {RELATIONSHIP_FILE_HASH}"
         in captured.out
     )
+
+
+def test_mitre_data_with_no_tactics(capsys):
+    mitre_data = {"success": True, "data": {"data": {"sandbox1": {"tactics": []}}}}
+    result = print_mitre_data(mitre_data, "hash123")
+    captured = capsys.readouterr()
+
+    assert result
+    assert "No tactics found for this sandbox." in captured.out
+
+
+def test_mitre_data_with_tactic_no_techniques(capsys):
+    mitre_data = {
+        "success": True,
+        "data": {
+            "data": {
+                "sandbox1": {
+                    "tactics": [
+                        {"name": "Persistence", "id": "TA0003", "techniques": []}
+                    ]
+                }
+            }
+        },
+    }
+    result = print_mitre_data(mitre_data, "hash123")
+    captured = capsys.readouterr()
+
+    assert result
+    assert "Tactic: Persistence (TA0003)" in captured.out
+    assert "No techniques found for this tactic." in captured.out
+
+
+def test_sandbox_behaviours_no_command_executions(capsys):
+    behaviours_result = {
+        "success": True,
+        "data": {
+            "data": [
+                {
+                    "id": "beh1",
+                    "attributes": {
+                        "sandbox_name": "sandboxA",
+                        "command_executions": [],
+                    },
+                }
+            ]
+        },
+    }
+    print_sandbox_behaviours(behaviours_result, "hash123")
+    captured = capsys.readouterr()
+
+    assert "Sandbox Name: sandboxA" in captured.out
+    assert "Behavior ID: beh1" in captured.out
+    assert "No command executions found." in captured.out
+
+
+def test_main_relationships_retry(monkeypatch, capsys):
+    calls = {"count": 0}
+
+    def fake_get_file_relationships(fh):
+        if calls["count"] == 0:
+            calls["count"] += 1
+            return {"success": False, "should_retry": True}
+        return {"success": True}
+
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.get_file_relationships",
+        fake_get_file_relationships,
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.print_relationships",
+        lambda data, fh: print("print_relationships RETRY"),
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.get_mitre_data",
+        lambda fh: {"success": True},
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.print_mitre_data",
+        lambda data, fh: None,
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.get_file_behaviours",
+        lambda fh: {"success": True},
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.print_sandbox_behaviours",
+        lambda data, fh: None,
+    )
+
+    main()
+    out = capsys.readouterr().out
+    assert "Retrying failed request..." in out
+    assert "print_relationships RETRY" in out
+
+
+def test_main_mitre_retry(monkeypatch, capsys):
+    calls = {"count": 0}
+
+    def fake_get_mitre_data(fh):
+        if calls["count"] == 0:
+            calls["count"] += 1
+            return {"success": False, "should_retry": True}
+        return {"success": True}
+
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.get_file_relationships",
+        lambda fh: {"success": True},
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.print_relationships",
+        lambda data, fh: None,
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.get_mitre_data",
+        fake_get_mitre_data,
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.print_mitre_data",
+        lambda data, fh: print("print_mitre_data RETRY"),
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.get_file_behaviours",
+        lambda fh: {"success": True},
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.print_sandbox_behaviours",
+        lambda data, fh: None,
+    )
+
+    main()
+    out = capsys.readouterr().out
+    assert "Retrying failed request..." in out
+    assert "print_mitre_data RETRY" in out
+
+
+def test_main_behaviours_retry(monkeypatch, capsys):
+    calls = {"count": 0}
+
+    def fake_get_file_behaviours(fh):
+        if calls["count"] == 0:
+            calls["count"] += 1
+            return {"success": False, "should_retry": True}
+        return {"success": True}
+
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.get_file_relationships",
+        lambda fh: {"success": True},
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.print_relationships",
+        lambda data, fh: None,
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.get_mitre_data",
+        lambda fh: {"success": True},
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.print_mitre_data",
+        lambda data, fh: None,
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.get_file_behaviours",
+        fake_get_file_behaviours,
+    )
+    monkeypatch.setattr(
+        "examples.automatic_and_manual_enrichment.enrich_file_with_relationship_and_behaviour.print_sandbox_behaviours",
+        lambda data, fh: print("print_sandbox_behaviours RETRY"),
+    )
+
+    main()
+    out = capsys.readouterr().out
+    assert "Retrying failed request..." in out
+    assert "print_sandbox_behaviours RETRY" in out
 
 
 def test_print_relationships_empty_relationships(capsys):

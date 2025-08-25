@@ -133,6 +133,30 @@ def test_make_api_request_500_server_error(mock_requests):
     assert result["should_retry"] is True
 
 
+def test_make_api_request_unexpected_http_status(mock_requests):
+    """Test API request with 500 Server Error."""
+    mock_response = MagicMock(status_code=900)
+    mock_requests.return_value = mock_response
+
+    result = make_api_request("threat_lists/cryptominer/2025081407")
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected HTTP status: 900"
+    assert result["status_code"] == 900
+    assert result["should_retry"] is False
+
+
+def test_make_api_unexpected_error(mock_requests):
+    """Test API request with connection error."""
+    mock_requests.side_effect = Exception("Unexpected error")
+
+    result = make_api_request("threat_lists/cryptominer/2025081407")
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected error: Unexpected error"
+    assert result["should_retry"] is False
+
+
 def test_make_api_request_timeout(mock_requests):
     mock_requests.side_effect = requests.exceptions.Timeout
 
@@ -470,3 +494,22 @@ def test_main_all_failures(mock_requests, mock_time_sleep, mock_datetime, capsys
     ]
     actual_urls = [call[0][0] for call in mock_requests.call_args_list]
     assert actual_urls == expected_urls
+
+
+def test_print_hourly_threat_list_exception(monkeypatch, capsys):
+    def mock_dumps(*args, **kwargs):
+        raise RuntimeError("Mocked JSON serialization failure")
+
+    monkeypatch.setattr("json.dumps", mock_dumps)
+
+    response = {"success": True, "data": {"iocs": [{"id": 1, "threat": "malware"}]}}
+
+    result = print_hourly_threat_list(response, "malware", "2025-08-21T12:00:00Z")
+
+    captured = capsys.readouterr()
+
+    assert result is False
+    assert (
+        "Error processing threat list: Mocked JSON serialization failure"
+        in captured.out
+    )

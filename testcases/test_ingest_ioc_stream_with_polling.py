@@ -140,6 +140,30 @@ def test_make_api_request_500_server_error(mock_requests):
     assert result["should_retry"] is True
 
 
+def test_make_api_request_unexpected_http_status(mock_requests):
+    """Test API request with 500 Server Error."""
+    mock_response = MagicMock(status_code=900)
+    mock_requests.return_value = mock_response
+
+    result = make_api_request(f"{BASE_URL}/ioc_stream", params={})
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected HTTP status: 900"
+    assert result["status_code"] == 900
+    assert result["should_retry"] is False
+
+
+def test_make_api_unexpected_error(mock_requests):
+    """Test API request with connection error."""
+    mock_requests.side_effect = Exception("Unexpected error")
+
+    result = make_api_request(f"{BASE_URL}/ioc_stream", params={})
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected error: Unexpected error"
+    assert result["should_retry"] is False
+
+
 def test_make_api_request_timeout(mock_requests):
     mock_requests.side_effect = requests.exceptions.Timeout
 
@@ -462,3 +486,71 @@ def test_main_failure_with_retry(mock_requests, mock_time_sleep, capsys):
     ]
     actual_calls = [(call[0], call[1]) for call in mock_requests.call_args_list]
     assert actual_calls == expected_calls
+
+
+def test_ioc_stream_success_with_data(capsys):
+    response = {
+        "success": True,
+        "data": {
+            "data": [{"id": "ioc1"}, {"id": "ioc2"}, {"id": "ioc3"}, {"id": "ioc4"}],
+            "meta": {"next_cursor": "cursor123"},
+        },
+    }
+    result = print_ioc_stream(response, max_display=2)
+
+    captured = capsys.readouterr()
+    assert "Received 4 new IOCs" in captured.out
+    assert '"id": "ioc1"' in captured.out
+    assert '"id": "ioc2"' in captured.out
+    assert "ioc3" not in captured.out
+    assert result == "cursor123"
+
+
+def test_ioc_stream_success_no_data(capsys):
+    response = {
+        "success": True,
+        "data": {"data": [], "meta": {"next_cursor": "cursor456"}},
+    }
+    result = print_ioc_stream(response)
+
+    captured = capsys.readouterr()
+    assert "No new IOCs received in this poll." in captured.out
+    assert result == "cursor456"
+
+
+def test_ioc_stream_error_with_retry(capsys):
+    response = {"success": False, "error": "Temporary failure", "should_retry": True}
+    result = print_ioc_stream(response)
+
+    captured = capsys.readouterr()
+    assert "Error fetching IOC stream: Temporary failure" in captured.out
+    assert "might succeed if retried later" in captured.out
+    assert result is None
+
+
+def test_ioc_stream_error_no_retry(capsys):
+    response = {"success": False, "error": "Critical failure", "should_retry": False}
+    result = print_ioc_stream(response)
+
+    captured = capsys.readouterr()
+    assert "Error fetching IOC stream: Critical failure" in captured.out
+    assert "might succeed if retried later" not in captured.out
+    assert result is None
+
+
+def test_ioc_stream_missing_fields(capsys):
+    response = {"success": True}
+    result = print_ioc_stream(response)
+
+    captured = capsys.readouterr()
+    assert "No new IOCs received in this poll." in captured.out
+    assert result is None
+
+
+def test_ioc_stream_exception_handling(capsys):
+    response = {"success": True, "data": None}
+    result = print_ioc_stream(response)
+
+    captured = capsys.readouterr()
+    assert "Error processing IOCs:" in captured.out
+    assert result is None

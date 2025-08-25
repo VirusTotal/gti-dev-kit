@@ -133,6 +133,30 @@ def test_make_api_request_500_server_error(mock_requests):
     assert result["should_retry"] is True
 
 
+def test_make_api_request_unexpected_http_status(mock_requests):
+    """Test API request with 500 Server Error."""
+    mock_response = MagicMock(status_code=900)
+    mock_requests.return_value = mock_response
+
+    result = make_api_request(f"{BASE_URL}/ioc_stream")
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected HTTP status: 900"
+    assert result["status_code"] == 900
+    assert result["should_retry"] is False
+
+
+def test_make_api_unexpected_error(mock_requests):
+    """Test API request with connection error."""
+    mock_requests.side_effect = Exception("Unexpected error")
+
+    result = make_api_request(f"{BASE_URL}/ioc_stream")
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected error: Unexpected error"
+    assert result["should_retry"] is False
+
+
 def test_make_api_request_timeout(mock_requests):
     mock_requests.side_effect = requests.exceptions.Timeout
 
@@ -353,3 +377,36 @@ def test_main_failure_with_retry(mock_requests, capsys):
     assert mock_requests.call_count == 2
     assert mock_requests.call_args_list[0][0][0] == f"{BASE_URL}/ioc_stream"
     assert mock_requests.call_args_list[1][0][0] == f"{BASE_URL}/ioc_stream"
+
+
+def test_print_ioc_stream_exception_case():
+    """Test that print_ioc_stream handles exceptions properly."""
+    malformed_response = {"success": True, "data": {"data": [{"invalid": "data"}]}}
+
+    with patch(
+        "examples.threat_list_and_ioc_stream_ingestion.ingest_ioc_stream.json.dumps"
+    ) as mock_dumps:  
+        mock_dumps.side_effect = Exception("JSON serialization failed")
+
+        with patch("builtins.print") as mock_print:
+            print_ioc_stream(malformed_response)
+
+            mock_print.assert_any_call("Error printing IOCs: JSON serialization failed")
+
+
+def test_print_ioc_stream_json_dumps_exception():
+    """Test exception handling specifically for json.dumps failure."""
+    valid_response = {
+        "success": True,
+        "data": {"data": [{"ioc": "malicious.com", "type": "domain"}]},
+    }
+
+    with patch(
+        "examples.threat_list_and_ioc_stream_ingestion.ingest_ioc_stream.json.dumps"
+    ) as mock_dumps:  
+        mock_dumps.side_effect = Exception("Custom JSON error")
+
+        with patch("builtins.print") as mock_print:
+            print_ioc_stream(valid_response)
+
+            mock_print.assert_any_call("Error printing IOCs: Custom JSON error")

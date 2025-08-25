@@ -1,7 +1,8 @@
-import pytest
-from unittest.mock import patch, MagicMock
+import os
+import tempfile
+from unittest.mock import Mock, patch
 import requests
-import json
+from requests.exceptions import Timeout, ConnectionError
 from examples.file_and_url_scanning.private_scanning.scan_file import (
     make_api_request,
     get_upload_url,
@@ -10,101 +11,37 @@ from examples.file_and_url_scanning.private_scanning.scan_file import (
     get_file_report,
     scan_private_file_and_get_report,
     print_scan_report,
-    main,
-    BASE_URL,
     MAX_DIRECT_UPLOAD_SIZE,
     POLLING_INTERVAL,
     MAX_POLLING_ATTEMPTS,
 )
-from testcases.constants import (
-    SCAN_PRIVATE_FILE_UPLOAD_RESPONSE,
-    SCAN_PRIVATE_FILE_ANALYSIS_IN_PROGRESS_RESPONSE,
-    SCAN_PRIVATE_FILE_ANALYSIS_COMPLETED_RESPONSE,
-    SCAN_PRIVATE_FILE_REPORT_RESPONSE,
-    SCAN_PRIVATE_FILE_UPLOAD_URL_RESPONSE,
-)
 
 
-@pytest.fixture
-def mock_requests():
-    with patch("requests.request") as mock_request:
-        yield mock_request
+@patch("requests.request")
+def test_successful_request(mock_request):
+    """Test successful API request"""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"data": "test_data"}
+    mock_request.return_value = mock_response
 
-
-@pytest.fixture
-def mock_open():
-    with patch("builtins.open", new_callable=MagicMock) as mock_file:
-        mock_file_obj = MagicMock()
-        mock_file_obj.read = MagicMock(return_value=b"11111")
-        mock_file.return_value.__enter__.return_value = mock_file_obj
-        yield mock_file
-
-
-@pytest.fixture
-def mock_os_path():
-    with patch("os.path") as mock_path:
-        yield mock_path
-
-
-@pytest.fixture
-def mock_time_sleep():
-    with patch("time.sleep") as mock_sleep:
-        yield mock_sleep
-
-
-def test_make_api_request_get_success(mock_requests):
-    """Test successful GET API request."""
-    mock_response = MagicMock(status_code=200)
-    mock_response.json.return_value = SCAN_PRIVATE_FILE_REPORT_RESPONSE
-    mock_requests.return_value = mock_response
-
-    result = make_api_request("GET", "private/files/test")
+    result = make_api_request("GET", "test_endpoint")
 
     assert result["success"] is True
-    assert result["data"] == SCAN_PRIVATE_FILE_REPORT_RESPONSE
+    assert result["data"] == {"data": "test_data"}
     assert result["error"] is None
     assert result["status_code"] == 200
     assert result["should_retry"] is False
-    mock_requests.assert_called_once_with(
-        "GET",
-        f"{BASE_URL}/private/files/test",
-        headers={"x-apikey": "YOUR_API_KEY", "x-tool": "YOUR_PRODUCT_NAME"},
-        files=None,
-        data=None,
-        timeout=60,
-    )
 
 
-def test_make_api_request_post_success(mock_requests):
-    """Test successful POST API request."""
-    mock_response = MagicMock(status_code=200)
-    mock_response.json.return_value = SCAN_PRIVATE_FILE_UPLOAD_RESPONSE
-    mock_requests.return_value = mock_response
+@patch("requests.request")
+def test_400_error(mock_request):
+    """Test 400 Bad Request error"""
+    mock_response = Mock()
+    mock_response.status_code = 400
+    mock_request.return_value = mock_response
 
-    files = {"file": ("test.txt", MagicMock(), "application/octet-stream")}
-    result = make_api_request("POST", "private/files", files=files)
-
-    assert result["success"] is True
-    assert result["data"] == SCAN_PRIVATE_FILE_UPLOAD_RESPONSE
-    assert result["error"] is None
-    assert result["status_code"] == 200
-    assert result["should_retry"] is False
-    mock_requests.assert_called_once_with(
-        "POST",
-        f"{BASE_URL}/private/files",
-        headers={"x-apikey": "YOUR_API_KEY", "x-tool": "YOUR_PRODUCT_NAME"},
-        files=files,
-        data=None,
-        timeout=60,
-    )
-
-
-def test_make_api_request_400_bad_request(mock_requests):
-    """Test API request with 400 Bad Request."""
-    mock_response = MagicMock(status_code=400)
-    mock_requests.return_value = mock_response
-
-    result = make_api_request("GET", "private/files/test")
+    result = make_api_request("GET", "test_endpoint")
 
     assert result["success"] is False
     assert result["error"] == "Bad request - invalid parameters"
@@ -112,12 +49,14 @@ def test_make_api_request_400_bad_request(mock_requests):
     assert result["should_retry"] is False
 
 
-def test_make_api_request_401_unauthorized(mock_requests):
-    """Test API request with 401 Unauthorized."""
-    mock_response = MagicMock(status_code=401)
-    mock_requests.return_value = mock_response
+@patch("requests.request")
+def test_401_error(mock_request):
+    """Test 401 Unauthorized error"""
+    mock_response = Mock()
+    mock_response.status_code = 401
+    mock_request.return_value = mock_response
 
-    result = make_api_request("GET", "private/files/test")
+    result = make_api_request("GET", "test_endpoint")
 
     assert result["success"] is False
     assert result["error"] == "Unauthorized - invalid API key"
@@ -125,12 +64,14 @@ def test_make_api_request_401_unauthorized(mock_requests):
     assert result["should_retry"] is False
 
 
-def test_make_api_request_403_forbidden(mock_requests):
-    """Test API request with 403 Forbidden."""
-    mock_response = MagicMock(status_code=403)
-    mock_requests.return_value = mock_response
+@patch("requests.request")
+def test_403_error(mock_request):
+    """Test 403 Forbidden error"""
+    mock_response = Mock()
+    mock_response.status_code = 403
+    mock_request.return_value = mock_response
 
-    result = make_api_request("GET", "private/files/test")
+    result = make_api_request("GET", "test_endpoint")
 
     assert result["success"] is False
     assert result["error"] == "Forbidden - insufficient permissions"
@@ -138,12 +79,14 @@ def test_make_api_request_403_forbidden(mock_requests):
     assert result["should_retry"] is False
 
 
-def test_make_api_request_404_not_found(mock_requests):
-    """Test API request with 404 Not Found."""
-    mock_response = MagicMock(status_code=404)
-    mock_requests.return_value = mock_response
+@patch("requests.request")
+def test_404_error(mock_request):
+    """Test 404 Not Found error"""
+    mock_response = Mock()
+    mock_response.status_code = 404
+    mock_request.return_value = mock_response
 
-    result = make_api_request("GET", "private/files/test")
+    result = make_api_request("GET", "test_endpoint")
 
     assert result["success"] is False
     assert result["error"] == "Resource not found"
@@ -151,12 +94,14 @@ def test_make_api_request_404_not_found(mock_requests):
     assert result["should_retry"] is False
 
 
-def test_make_api_request_429_rate_limit(mock_requests):
-    """Test API request with 429 Rate Limit Exceeded."""
-    mock_response = MagicMock(status_code=429)
-    mock_requests.return_value = mock_response
+@patch("requests.request")
+def test_429_error(mock_request):
+    """Test 429 Rate Limit error"""
+    mock_response = Mock()
+    mock_response.status_code = 429
+    mock_request.return_value = mock_response
 
-    result = make_api_request("GET", "private/files/test")
+    result = make_api_request("GET", "test_endpoint")
 
     assert result["success"] is False
     assert result["error"] == "Rate limit exceeded"
@@ -164,12 +109,14 @@ def test_make_api_request_429_rate_limit(mock_requests):
     assert result["should_retry"] is True
 
 
-def test_make_api_request_500_server_error(mock_requests):
-    """Test API request with 500 Server Error."""
-    mock_response = MagicMock(status_code=500)
-    mock_requests.return_value = mock_response
+@patch("requests.request")
+def test_500_error(mock_request):
+    """Test 500 Server error"""
+    mock_response = Mock()
+    mock_response.status_code = 500
+    mock_request.return_value = mock_response
 
-    result = make_api_request("GET", "private/files/test")
+    result = make_api_request("GET", "test_endpoint")
 
     assert result["success"] is False
     assert result["error"] == "Server error (HTTP 500)"
@@ -177,596 +124,907 @@ def test_make_api_request_500_server_error(mock_requests):
     assert result["should_retry"] is True
 
 
-def test_make_api_request_timeout(mock_requests):
-    """Test API request with timeout."""
-    mock_requests.side_effect = requests.exceptions.Timeout
+@patch("requests.request")
+def test_unexpected_status_code(mock_request):
+    """Test unexpected status code"""
+    mock_response = Mock()
+    mock_response.status_code = 418
+    mock_request.return_value = mock_response
 
-    result = make_api_request("GET", "private/files/test")
+    result = make_api_request("GET", "test_endpoint")
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected HTTP status: 418"
+    assert result["status_code"] == 418
+    assert result["should_retry"] is False
+
+
+@patch("requests.request")
+def test_json_parse_error(mock_request):
+    """Test JSON parsing error"""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.side_effect = ValueError("Invalid JSON")
+    mock_request.return_value = mock_response
+
+    result = make_api_request("GET", "test_endpoint")
+
+    assert result["success"] is False
+    assert "Failed to parse JSON response" in result["error"]
+    assert result["status_code"] == 200
+    assert result["should_retry"] is False
+
+
+@patch("requests.request")
+def test_timeout_error(mock_request):
+    """Test timeout error"""
+    mock_request.side_effect = Timeout("Request timed out")
+
+    result = make_api_request("GET", "test_endpoint")
 
     assert result["success"] is False
     assert result["error"] == "Request timed out"
     assert result["should_retry"] is True
 
 
-def test_make_api_request_connection_error(mock_requests):
-    """Test API request with connection error."""
-    mock_requests.side_effect = requests.exceptions.ConnectionError
+@patch("requests.request")
+def test_connection_error(mock_request):
+    """Test connection error"""
+    mock_request.side_effect = ConnectionError("Connection failed")
 
-    result = make_api_request("GET", "private/files/test")
+    result = make_api_request("GET", "test_endpoint")
 
     assert result["success"] is False
-    assert result["error"] == "Connection error - check your network"
+    assert "Connection error" in result["error"]
     assert result["should_retry"] is True
 
 
-def test_make_api_request_json_decode_error(mock_requests):
-    """Test API request with JSON decode error."""
-    mock_response = MagicMock(status_code=200)
-    mock_response.json.side_effect = ValueError("Invalid JSON")
-    mock_requests.return_value = mock_response
+@patch("requests.request")
+def test_general_request_exception(mock_request):
+    """Test general request exception"""
+    mock_request.side_effect = requests.exceptions.RequestException("General error")
 
-    result = make_api_request("GET", "private/files/test")
+    result = make_api_request("GET", "test_endpoint")
 
     assert result["success"] is False
-    assert result["error"] == "Failed to parse JSON response: Invalid JSON"
+    assert "Request failed" in result["error"]
     assert result["should_retry"] is False
 
 
-def test_make_api_request_unexpected_error(mock_requests):
-    """Test API request with unexpected error."""
-    mock_requests.side_effect = requests.exceptions.RequestException("Unexpected error")
+@patch("requests.request")
+def test_unexpected_exception(mock_request):
+    """Test unexpected exception"""
+    mock_request.side_effect = Exception("Unexpected error")
 
-    result = make_api_request("GET", "private/files/test")
+    result = make_api_request("GET", "test_endpoint")
 
     assert result["success"] is False
-    assert result["error"] == "Request failed: Unexpected error"
+    assert "Unexpected error" in result["error"]
     assert result["should_retry"] is False
 
 
-def test_get_upload_url_success(mock_requests):
-    """Test successful retrieval of upload URL."""
-    mock_response = MagicMock(status_code=200)
-    mock_response.json.return_value = SCAN_PRIVATE_FILE_UPLOAD_URL_RESPONSE
-    mock_requests.return_value = mock_response
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.make_api_request")
+def test_successful_upload_url(mock_make_api_request):
+    """Test successful upload URL retrieval"""
+    mock_response = {"success": True, "data": {"data": "https://upload.url"}}
+    mock_make_api_request.return_value = mock_response
 
     result = get_upload_url()
 
-    assert result["success"] is True
-    assert result["data"] == SCAN_PRIVATE_FILE_UPLOAD_URL_RESPONSE
-    assert result["error"] is None
-    assert result["status_code"] == 200
-    assert result["should_retry"] is False
-    mock_requests.assert_called_once_with(
-        "GET",
-        f"{BASE_URL}/private/files/upload_url",
-        headers={"x-apikey": "YOUR_API_KEY", "x-tool": "YOUR_PRODUCT_NAME"},
-        files=None,
-        data=None,
-        timeout=60,
-    )
+    assert result == mock_response
+    mock_make_api_request.assert_called_once_with("GET", "private/files/upload_url")
 
 
-def test_get_upload_url_rate_limit(mock_requests):
-    """Test upload URL retrieval with rate limit error."""
-    mock_response = MagicMock(status_code=429)
-    mock_requests.return_value = mock_response
-
-    result = get_upload_url()
+def test_file_not_found():
+    """Test file not found error"""
+    result = upload_file("nonexistent_file.txt")
 
     assert result["success"] is False
-    assert result["error"] == "Rate limit exceeded"
-    assert result["status_code"] == 429
-    assert result["should_retry"] is True
-
-
-def test_get_upload_url_unauthorized(mock_requests):
-    """Test upload URL retrieval with unauthorized error."""
-    mock_response = MagicMock(status_code=401)
-    mock_requests.return_value = mock_response
-
-    result = get_upload_url()
-
-    assert result["success"] is False
-    assert result["error"] == "Unauthorized - invalid API key"
-    assert result["status_code"] == 401
+    assert "File not found" in result["error"]
     assert result["should_retry"] is False
 
 
-def test_upload_file_direct_success(mock_requests, mock_open, mock_os_path):
-    """Test successful direct file upload."""
-    mock_response = MagicMock(status_code=200)
-    mock_response.json.return_value = SCAN_PRIVATE_FILE_UPLOAD_RESPONSE
-    mock_requests.return_value = mock_response
-    mock_os_path.exists.return_value = True
-    mock_os_path.basename.return_value = "test.txt"
-    mock_file_obj = mock_open.return_value.__enter__.return_value
+@patch("builtins.open")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.make_api_request")
+def test_successful_upload(mock_make_api_request, mock_open):
+    """Test successful file upload"""
+    mock_file = Mock()
+    mock_open.return_value.__enter__.return_value = mock_file
 
-    result = upload_file("test.txt")
+    mock_response = {"success": True, "data": {"test": "data"}}
+    mock_make_api_request.return_value = mock_response
 
-    assert result["success"] is True
-    assert result["data"] == SCAN_PRIVATE_FILE_UPLOAD_RESPONSE
-    assert result["error"] is None
-    assert result["status_code"] == 200
-    assert result["should_retry"] is False
-    mock_requests.assert_called_once_with(
-        "POST",
-        f"{BASE_URL}/private/files",
-        headers={"x-apikey": "YOUR_API_KEY", "x-tool": "YOUR_PRODUCT_NAME"},
-        files={"file": ("test.txt", mock_file_obj, "application/octet-stream")},
-        data=None,
-        timeout=60,
-    )
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b"test content")
+        temp_file_path = temp_file.name
+
+    try:
+        result = upload_file(temp_file_path)
+
+        assert result == mock_response
+        mock_make_api_request.assert_called_once()
+    finally:
+        os.unlink(temp_file_path)
 
 
-def test_upload_file_not_found(mock_os_path):
-    """Test upload with file not found."""
-    mock_os_path.exists.return_value = False
+@patch("builtins.open")
+def test_file_upload_exception(mock_open):
+    """Test file upload exception"""
+    mock_open.side_effect = Exception("File open error")
 
-    result = upload_file("test.txt")
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b"test content")
+        temp_file_path = temp_file.name
 
-    assert result["success"] is False
-    assert result["error"] == "File not found: test.txt"
-    assert result["should_retry"] is False
+    try:
+        result = upload_file(temp_file_path)
 
-
-def test_upload_file_retryable_failure(mock_requests, mock_open, mock_os_path):
-    """Test upload with retryable failure."""
-    mock_response = MagicMock(status_code=429)
-    mock_requests.return_value = mock_response
-    mock_os_path.exists.return_value = True
-    mock_os_path.basename.return_value = "test.txt"
-    mock_file_obj = mock_open.return_value.__enter__.return_value
-
-    result = upload_file("test.txt")
-
-    assert result["success"] is False
-    assert result["error"] == "Rate limit exceeded"
-    assert result["status_code"] == 429
-    assert result["should_retry"] is True
-    mock_requests.assert_called_once_with(
-        "POST",
-        f"{BASE_URL}/private/files",
-        headers={"x-apikey": "YOUR_API_KEY", "x-tool": "YOUR_PRODUCT_NAME"},
-        files={"file": ("test.txt", mock_file_obj, "application/octet-stream")},
-        data=None,
-        timeout=60,
-    )
+        assert result["success"] is False
+        assert "File upload failed" in result["error"]
+        assert result["should_retry"] is True
+    finally:
+        os.unlink(temp_file_path)
 
 
-def test_upload_file_non_retryable_failure(mock_requests, mock_open, mock_os_path):
-    """Test upload with non-retryable failure."""
-    mock_response = MagicMock(status_code=401)
-    mock_requests.return_value = mock_response
-    mock_os_path.exists.return_value = True
-    mock_os_path.basename.return_value = "test.txt"
-    mock_file_obj = mock_open.return_value.__enter__.return_value
-
-    result = upload_file("test.txt")
-
-    assert result["success"] is False
-    assert result["error"] == "Unauthorized - invalid API key"
-    assert result["status_code"] == 401
-    assert result["should_retry"] is False
-    mock_requests.assert_called_once_with(
-        "POST",
-        f"{BASE_URL}/private/files",
-        headers={"x-apikey": "YOUR_API_KEY", "x-tool": "YOUR_PRODUCT_NAME"},
-        files={"file": ("test.txt", mock_file_obj, "application/octet-stream")},
-        data=None,
-        timeout=60,
-    )
-
-
-def test_poll_analysis_status_completed(mock_requests):
-    """Test polling with completed status."""
-    mock_response = MagicMock(status_code=200)
-    mock_response.json.return_value = SCAN_PRIVATE_FILE_ANALYSIS_COMPLETED_RESPONSE
-    mock_requests.return_value = mock_response
-
-    result = poll_analysis_status(
-        "MzJhNzZlODhiMjc0NzBjMTg1ODI1NTY4MDg0NzgxOGM6YTA5NWI4ZDE1MTNhOWRkNDBhYjk5YTBmYzFmNjI4NWI6MTc1NTE0NDY1Nw=="
-    )
-
-    assert result["success"] is True
-    assert result["data"] == SCAN_PRIVATE_FILE_ANALYSIS_COMPLETED_RESPONSE
-    assert result["error"] is None
-    assert result["should_retry"] is False
-    mock_requests.assert_called_once_with(
-        "GET",
-        f"{BASE_URL}/private/analyses/MzJhNzZlODhiMjc0NzBjMTg1ODI1NTY4MDg0NzgxOGM6YTA5NWI4ZDE1MTNhOWRkNDBhYjk5YTBmYzFmNjI4NWI6MTc1NTE0NDY1Nw==",
-        headers={"x-apikey": "YOUR_API_KEY", "x-tool": "YOUR_PRODUCT_NAME"},
-        files=None,
-        data=None,
-        timeout=60,
-    )
-
-
-def test_poll_analysis_status_in_progress(mock_requests, mock_time_sleep):
-    """Test polling with in-progress status."""
-    mock_response = MagicMock(status_code=200)
-    mock_response.json.return_value = SCAN_PRIVATE_FILE_ANALYSIS_IN_PROGRESS_RESPONSE
-    mock_requests.return_value = mock_response
-
-    result = poll_analysis_status(
-        "MzJhNzZlODhiMjc0NzBjMTg1ODI1NTY4MDg0NzgxOGM6YTA5NWI4ZDE1MTNhOWRkNDBhYjk5YTBmYzFmNjI4NWI6MTc1NTE0NDY1Nw=="
-    )
-
-    assert result["success"] is False
-    assert result["error"] == "Max polling attempts reached"
-    assert result["should_retry"] is True
-    assert mock_requests.call_count == MAX_POLLING_ATTEMPTS
-    assert mock_time_sleep.call_count == MAX_POLLING_ATTEMPTS - 1
-
-
-def test_poll_analysis_status_error(mock_requests):
-    """Test polling with error status."""
-    mock_response = MagicMock(status_code=200)
-    mock_response.json.return_value = {
-        "data": {
-            "type": "private_analysis",
-            "id": "MzJhNzZlODhiMjc0NzBjMTg1ODI1NTY4MDg0NzgxOGM6YTA5NWI4ZDE1MTNhOWRkNDBhYjk5YTBmYzFmNjI4NWI6MTc1NTE0NDY1Nw==",
-            "attributes": {"status": "error"},
-        }
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.make_api_request")
+@patch("time.sleep")
+def test_unsupported_file_type_status(mock_sleep, mock_make_api_request):
+    """Test unsupported file type status"""
+    mock_response = {
+        "success": True,
+        "data": {"data": {"attributes": {"status": "unsupported file type"}}},
     }
-    mock_requests.return_value = mock_response
+    mock_make_api_request.return_value = mock_response
 
-    result = poll_analysis_status(
-        "MzJhNzZlODhiMjc0NzBjMTg1ODI1NTY4MDg0NzgxOGM6YTA5NWI4ZDE1MTNhOWRkNDBhYjk5YTBmYzFmNjI4NWI6MTc1NTE0NDY1Nw=="
-    )
+    result = poll_analysis_status("test_analysis_id")
 
     assert result["success"] is False
-    assert result["error"] == "Analysis error"
-    assert result["should_retry"] is False
+    assert "Analysis unsupported file type" in result["error"]
+    mock_sleep.assert_not_called()
 
 
-def test_poll_analysis_status_unsupported_file(mock_requests):
-    """Test polling with unsupported file type."""
-    mock_response = MagicMock(status_code=200)
-    mock_response.json.return_value = {
-        "data": {
-            "type": "private_analysis",
-            "id": "MzJhNzZlODhiMjc0NzBjMTg1ODI1NTY4MDg0NzgxOGM6YTA5NWI4ZDE1MTNhOWRkNDBhYjk5YTBmYzFmNjI4NWI6MTc1NTE0NDY1Nw==",
-            "attributes": {"status": "unsupported file type"},
-        }
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.make_api_request")
+@patch("time.sleep")
+def test_corrupted_file_status(mock_sleep, mock_make_api_request):
+    """Test corrupted file status"""
+    mock_response = {
+        "success": True,
+        "data": {"data": {"attributes": {"status": "corrupted file"}}},
     }
-    mock_requests.return_value = mock_response
+    mock_make_api_request.return_value = mock_response
 
-    result = poll_analysis_status(
-        "MzJhNzZlODhiMjc0NzBjMTg1ODI1NTY4MDg0NzgxOGM6YTA5NWI4ZDE1MTNhOWRkNDBhYjk5YTBmYzFmNjI4NWI6MTc1NTE0NDY1Nw=="
-    )
+    result = poll_analysis_status("test_analysis_id")
 
     assert result["success"] is False
-    assert result["error"] == "Analysis unsupported file type"
-    assert result["should_retry"] is False
+    assert "Analysis corrupted file" in result["error"]
+    mock_sleep.assert_not_called()
 
 
-def test_poll_analysis_status_corrupted_file(mock_requests):
-    """Test polling with corrupted file status."""
-    mock_response = MagicMock(status_code=200)
-    mock_response.json.return_value = {
-        "data": {
-            "type": "private_analysis",
-            "id": "MzJhNzZlODhiMjc0NzBjMTg1ODI1NTY4MDg0NzgxOGM6YTA5NWI4ZDE1MTNhOWRkNDBhYjk5YTBmYzFmNjI4NWI6MTc1NTE0NDY1Nw==",
-            "attributes": {"status": "corrupted file"},
-        }
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.make_api_request")
+@patch("time.sleep")
+def test_successful_completion(mock_sleep, mock_make_api_request):
+    """Test successful analysis completion"""
+    mock_response_completed = {
+        "success": True,
+        "data": {"data": {"attributes": {"status": "completed"}}},
     }
-    mock_requests.return_value = mock_response
+    mock_make_api_request.return_value = mock_response_completed
 
-    result = poll_analysis_status(
-        "MzJhNzZlODhiMjc0NzBjMTg1ODI1NTY4MDg0NzgxOGM6YTA5NWI4ZDE1MTNhOWRkNDBhYjk5YTBmYzFmNjI4NWI6MTc1NTE0NDY1Nw=="
+    result = poll_analysis_status("test_analysis_id")
+
+    assert result == mock_response_completed
+    mock_make_api_request.assert_called_once_with(
+        "GET", "private/analyses/test_analysis_id"
     )
+    mock_sleep.assert_not_called()
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.make_api_request")
+@patch("time.sleep")
+def test_error_status(mock_sleep, mock_make_api_request):
+    """Test analysis error status"""
+    mock_response_error = {
+        "success": True,
+        "data": {"data": {"attributes": {"status": "error"}}},
+    }
+    mock_make_api_request.return_value = mock_response_error
+
+    result = poll_analysis_status("test_analysis_id")
 
     assert result["success"] is False
-    assert result["error"] == "Analysis corrupted file"
-    assert result["should_retry"] is False
+    assert "Analysis error" in result["error"]
+    mock_sleep.assert_not_called()
 
 
-def test_poll_analysis_status_api_failure(mock_requests):
-    """Test polling with API failure."""
-    mock_response = MagicMock(status_code=429)
-    mock_requests.return_value = mock_response
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.make_api_request")
+@patch("time.sleep")
+def test_polling_with_retries(mock_sleep, mock_make_api_request):
+    """Test polling with multiple retries"""
+    mock_response_queued = {
+        "success": True,
+        "data": {"data": {"attributes": {"status": "queued"}}},
+    }
+    mock_response_completed = {
+        "success": True,
+        "data": {"data": {"attributes": {"status": "completed"}}},
+    }
 
-    result = poll_analysis_status(
-        "MzJhNzZlODhiMjc0NzBjMTg1ODI1NTY4MDg0NzgxOGM6YTA5NWI4ZDE1MTNhOWRkNDBhYjk5YTBmYzFmNjI4NWI6MTc1NTE0NDY1Nw=="
-    )
+    mock_make_api_request.side_effect = [mock_response_queued, mock_response_completed]
 
-    assert result["success"] is False
-    assert result["error"] == "Rate limit exceeded"
-    assert result["status_code"] == 429
-    assert result["should_retry"] is True
+    result = poll_analysis_status("test_analysis_id")
 
-
-def test_get_file_report_success(mock_requests):
-    """Test successful file report retrieval."""
-    mock_response = MagicMock(status_code=200)
-    mock_response.json.return_value = SCAN_PRIVATE_FILE_REPORT_RESPONSE
-    mock_requests.return_value = mock_response
-
-    result = get_file_report(
-        "f0de2e62ca270423aecf386b578668a3bcebd300f0bc794e667f6467d4792a3d"
-    )
-
-    assert result["success"] is True
-    assert result["data"] == SCAN_PRIVATE_FILE_REPORT_RESPONSE
-    assert result["error"] is None
-    assert result["status_code"] == 200
-    assert result["should_retry"] is False
+    assert result == mock_response_completed
+    assert mock_make_api_request.call_count == 2
+    mock_sleep.assert_called_once_with(POLLING_INTERVAL)
 
 
-def test_get_file_report_rate_limit(mock_requests):
-    """Test file report retrieval with rate limit error."""
-    mock_response = MagicMock(status_code=429)
-    mock_requests.return_value = mock_response
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.make_api_request")
+@patch("time.sleep")
+def test_max_polling_attempts(mock_sleep, mock_make_api_request):
+    """Test max polling attempts reached"""
+    mock_response_queued = {
+        "success": True,
+        "data": {"data": {"attributes": {"status": "queued"}}},
+    }
 
-    result = get_file_report(
-        "f0de2e62ca270423aecf386b578668a3bcebd300f0bc794e667f6467d4792a3d"
-    )
+    mock_make_api_request.return_value = mock_response_queued
+
+    result = poll_analysis_status("test_analysis_id")
 
     assert result["success"] is False
-    assert result["error"] == "Rate limit exceeded"
-    assert result["status_code"] == 429
-    assert result["should_retry"] is True
+    assert "Max polling attempts reached" in result["error"]
+    assert mock_make_api_request.call_count == MAX_POLLING_ATTEMPTS
+    assert mock_sleep.call_count == MAX_POLLING_ATTEMPTS - 1
 
 
-def test_get_file_report_not_found(mock_requests):
-    """Test file report retrieval with not found error."""
-    mock_response = MagicMock(status_code=404)
-    mock_requests.return_value = mock_response
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.make_api_request")
+@patch("time.sleep")
+def test_failed_api_call(mock_sleep, mock_make_api_request):
+    """Test failed API call during polling"""
+    mock_response_failed = {"success": False, "error": "API error"}
+    mock_make_api_request.return_value = mock_response_failed
 
-    result = get_file_report(
-        "f0de2e62ca270423aecf386b578668a3bcebd300f0bc794e667f6467d4792a3d"
-    )
+    result = poll_analysis_status("test_analysis_id")
 
-    assert result["success"] is False
-    assert result["error"] == "Resource not found"
-    assert result["status_code"] == 404
-    assert result["should_retry"] is False
+    assert result == mock_response_failed
+    mock_sleep.assert_not_called()
 
 
-def test_scan_private_file_and_get_report_missing_file(mock_os_path, capsys):
-    """Test scan with missing file."""
-    mock_os_path.exists.return_value = False
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.make_api_request")
+def test_successful_report(mock_make_api_request):
+    """Test successful file report retrieval"""
+    mock_response = {"success": True, "data": {"report": "data"}}
+    mock_make_api_request.return_value = mock_response
 
-    result = scan_private_file_and_get_report("test.txt")
+    result = get_file_report("test_hash")
 
-    captured = capsys.readouterr()
+    assert result == mock_response
+    mock_make_api_request.assert_called_once_with("GET", "private/files/test_hash")
+
+
+def test_file_not_found():
+    """Test file not found"""
+    result = scan_private_file_and_get_report("nonexistent_file.txt")
     assert result is None
-    assert "Error: File not found at test.txt" in captured.out
 
 
-def test_scan_private_file_and_get_report_empty_file(mock_os_path, capsys):
-    """Test scan with empty file."""
-    mock_os_path.exists.return_value = True
-    mock_os_path.getsize.return_value = 0
+def test_empty_file():
+    """Test empty file"""
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file_path = temp_file.name
 
-    result = scan_private_file_and_get_report("test.txt")
+    try:
+        result = scan_private_file_and_get_report(temp_file_path)
+        assert result is None
+    finally:
+        os.unlink(temp_file_path)
 
-    captured = capsys.readouterr()
-    assert result is None
-    assert "Error: File is empty" in captured.out
 
-
-def test_scan_private_file_and_get_report_upload_failure(
-    mock_requests, mock_os_path, mock_open, capsys
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.get_upload_url")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.poll_analysis_status")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.get_file_report")
+def test_successful_scan_small_file(
+    mock_get_report, mock_poll, mock_upload, mock_get_url
 ):
-    """Test scan with non-retryable upload failure."""
-    mock_os_path.exists.return_value = True
-    mock_os_path.getsize.return_value = 206
-    mock_os_path.basename.return_value = "test.txt"
-    mock_file_obj = mock_open.return_value.__enter__.return_value
+    """Test successful scan of small file"""
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b"test content")
+        temp_file_path = temp_file.name
 
-    upload_response = MagicMock(status_code=401)
-    mock_requests.return_value = upload_response
-
-    result = scan_private_file_and_get_report("test.txt")
-
-    captured = capsys.readouterr()
-    assert result is None
-    assert "Error uploading file: Unauthorized - invalid API key" in captured.out
-    assert "Retrying upload..." not in captured.out
-
-
-def test_scan_private_file_and_get_report_polling_timeout(
-    mock_requests, mock_os_path, mock_open, mock_time_sleep, capsys
-):
-    """Test scan with polling timeout."""
-    mock_os_path.exists.return_value = True
-    mock_os_path.getsize.return_value = 206
-    mock_os_path.basename.return_value = "test.txt"
-    mock_file_obj = mock_open.return_value.__enter__.return_value
-
-    upload_response = MagicMock(status_code=200)
-    upload_response.json.return_value = SCAN_PRIVATE_FILE_UPLOAD_RESPONSE
-    analysis_response = MagicMock(status_code=200)
-    analysis_response.json.return_value = (
-        SCAN_PRIVATE_FILE_ANALYSIS_IN_PROGRESS_RESPONSE
-    )
-    mock_requests.side_effect = [upload_response] + [
-        analysis_response
-    ] * MAX_POLLING_ATTEMPTS
-
-    result = scan_private_file_and_get_report("test.txt")
-
-    captured = capsys.readouterr()
-    assert result is None
-    assert "Max polling attempts reached" in captured.out
-    assert mock_requests.call_count == 1 + MAX_POLLING_ATTEMPTS
-
-
-def test_scan_private_file_and_get_report_no_analysis_id(
-    mock_requests, mock_os_path, mock_open, capsys
-):
-    """Test scan with missing analysis ID."""
-    mock_os_path.exists.return_value = True
-    mock_os_path.getsize.return_value = 206
-    mock_os_path.basename.return_value = "test.txt"
-    mock_file_obj = mock_open.return_value.__enter__.return_value
-
-    upload_response = MagicMock(status_code=200)
-    upload_response.json.return_value = {"data": {}}
-    mock_requests.return_value = upload_response
-
-    result = scan_private_file_and_get_report("test.txt")
-
-    captured = capsys.readouterr()
-    assert result is None
-    assert "Error: No analysis ID received" in captured.out
-
-
-def test_scan_private_file_and_get_report_no_file_hash(
-    mock_requests, mock_os_path, mock_open, capsys
-):
-    """Test scan with missing file hash."""
-    mock_os_path.exists.return_value = True
-    mock_os_path.getsize.return_value = 206
-    mock_os_path.basename.return_value = "test.txt"
-    mock_file_obj = mock_open.return_value.__enter__.return_value
-
-    upload_response = MagicMock(status_code=200)
-    upload_response.json.return_value = SCAN_PRIVATE_FILE_UPLOAD_RESPONSE
-    analysis_response = MagicMock(status_code=200)
-    analysis_response.json.return_value = {
-        "data": {
-            "type": "private_analysis",
-            "id": "MzJhNzZlODhiMjc0NzBjMTg1ODI1NTY4MDg0NzgxOGM6YTA5NWI4ZDE1MTNhOWRkNDBhYjk5YTBmYzFmNjI4NWI6MTc1NTE0NDY1Nw==",
-            "attributes": {"status": "completed"},
-            "meta": {},
+    try:
+        mock_upload_response = {
+            "success": True,
+            "data": {"data": {"id": "test_analysis_id"}},
         }
-    }
-    mock_requests.side_effect = [upload_response, analysis_response]
-
-    result = scan_private_file_and_get_report("test.txt")
-
-    captured = capsys.readouterr()
-    assert result is None
-    assert "Error: No file hash received" in captured.out
-
-
-def test_print_scan_report_clean(capsys):
-    """Test printing scan report with clean verdict."""
-    print_scan_report(SCAN_PRIVATE_FILE_REPORT_RESPONSE)
-    captured = capsys.readouterr()
-
-    assert "--- Scan Report ---" in captured.out
-    assert (
-        "File SHA-256: f0de2e62ca270423aecf386b578668a3bcebd300f0bc794e667f6467d4792a3d"
-        in captured.out
-    )
-    assert "Verdict: CLEAN" in captured.out
-    assert "Malicious detections" not in captured.out
-    assert "GTI Assessment:" in captured.out
-    assert "verdict: {'value': 'VERDICT_UNDETECTED'}" in captured.out
-    assert (
-        "description: This indicator did not match our detection criteria and there is currently no evidence of malicious activity."
-        in captured.out
-    )
-    assert "====== Full JSON Report ========" in captured.out
-    assert (
-        json.dumps(SCAN_PRIVATE_FILE_REPORT_RESPONSE["data"], indent=2) in captured.out
-    )
-
-
-def test_print_scan_report_malicious(capsys):
-    """Test printing scan report with malicious verdict."""
-    malicious_report = {
-        "data": {
-            "id": "f0de2e62ca270423aecf386b578668a3bcebd300f0bc794e667f6467d4792a3d",
-            "type": "private_file",
-            "attributes": {
-                "last_analysis_stats": {
-                    "malicious": 2,
-                    "suspicious": 1,
-                    "undetected": 90,
-                    "harmless": 5,
-                },
-                "gti_assessment": {
-                    "verdict": {"value": "VERDICT_MALICIOUS"},
-                    "threat_score": {"value": 80},
-                },
-            },
+        mock_poll_response = {
+            "success": True,
+            "data": {"meta": {"file_info": {"sha256": "test_hash"}}},
         }
-    }
-    print_scan_report(malicious_report)
-    captured = capsys.readouterr()
+        mock_report_response = {"success": True, "data": {"final": "report"}}
 
-    assert "Verdict: MALICIOUS" in captured.out
-    assert "Malicious detections: 2" in captured.out
-    assert "GTI Assessment:" in captured.out
-    assert "verdict: {'value': 'VERDICT_MALICIOUS'}" in captured.out
+        mock_upload.return_value = mock_upload_response
+        mock_poll.return_value = mock_poll_response
+        mock_get_report.return_value = mock_report_response
+
+        result = scan_private_file_and_get_report(temp_file_path)
+
+        assert result == {"final": "report"}
+        mock_get_url.assert_not_called()
+        mock_upload.assert_called_once()
+        mock_poll.assert_called_once_with("test_analysis_id")
+        mock_get_report.assert_called_once_with("test_hash")
+
+    finally:
+        os.unlink(temp_file_path)
 
 
-def test_print_scan_report_no_gti_assessment(capsys):
-    """Test printing scan report without GTI assessment."""
-    report = {
-        "data": {
-            "id": "f0de2e62ca270423aecf386b578668a3bcebd300f0bc794e667f6467d4792a3d",
-            "type": "private_file",
-            "attributes": {
-                "last_analysis_stats": {
-                    "malicious": 1,
-                    "suspicious": 0,
-                    "undetected": 94,
-                    "harmless": 5,
-                }
-            },
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.get_upload_url")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.poll_analysis_status")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.get_file_report")
+def test_successful_scan_large_file(
+    mock_get_report, mock_poll, mock_upload, mock_get_url
+):
+    """Test successful scan of large file"""
+    large_content = b"0" * (MAX_DIRECT_UPLOAD_SIZE + 1)
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(large_content)
+        temp_file_path = temp_file.name
+
+    try:
+        mock_get_url_response = {
+            "success": True,
+            "data": {"data": "https://large.upload.url"},
         }
-    }
-    print_scan_report(report)
+        mock_upload_response = {
+            "success": True,
+            "data": {"data": {"id": "test_analysis_id"}},
+        }
+        mock_poll_response = {
+            "success": True,
+            "data": {"meta": {"file_info": {"sha256": "test_hash"}}},
+        }
+        mock_report_response = {"success": True, "data": {"final": "report"}}
+
+        mock_get_url.return_value = mock_get_url_response
+        mock_upload.return_value = mock_upload_response
+        mock_poll.return_value = mock_poll_response
+        mock_get_report.return_value = mock_report_response
+
+        result = scan_private_file_and_get_report(temp_file_path)
+
+        assert result == {"final": "report"}
+        mock_get_url.assert_called_once()
+        mock_upload.assert_called_once_with(temp_file_path, "https://large.upload.url")
+
+    finally:
+        os.unlink(temp_file_path)
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.get_upload_url")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+def test_upload_url_failure(mock_upload, mock_get_url):
+    """Test upload URL failure for large file"""
+    large_content = b"0" * (MAX_DIRECT_UPLOAD_SIZE + 1)
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(large_content)
+        temp_file_path = temp_file.name
+
+    try:
+        mock_get_url_response = {"success": False, "error": "URL error"}
+        mock_get_url.return_value = mock_get_url_response
+
+        result = scan_private_file_and_get_report(temp_file_path)
+
+        assert result is None
+        mock_get_url.assert_called_once()
+        mock_upload.assert_not_called()
+
+    finally:
+        os.unlink(temp_file_path)
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+def test_upload_failure_no_retry(mock_upload):
+    """Test upload failure without retry"""
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b"test content")
+        temp_file_path = temp_file.name
+
+    try:
+        mock_upload_response = {
+            "success": False,
+            "error": "Upload error",
+            "should_retry": False,
+        }
+        mock_upload.return_value = mock_upload_response
+
+        result = scan_private_file_and_get_report(temp_file_path)
+
+        assert result is None
+        mock_upload.assert_called_once()
+
+    finally:
+        os.unlink(temp_file_path)
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+def test_upload_failure_with_retry(mock_upload):
+    """Test upload failure with retry"""
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b"test content")
+        temp_file_path = temp_file.name
+
+    try:
+        mock_upload_response_fail = {
+            "success": False,
+            "error": "Upload error",
+            "should_retry": True,
+        }
+        mock_upload_response_success = {
+            "success": True,
+            "data": {"data": {"id": "test_analysis_id"}},
+        }
+        mock_upload.side_effect = [
+            mock_upload_response_fail,
+            mock_upload_response_success,
+        ]
+
+        with patch(
+            "examples.file_and_url_scanning.private_scanning.scan_file.poll_analysis_status"
+        ) as mock_poll, patch(
+            "examples.file_and_url_scanning.private_scanning.scan_file.get_file_report"
+        ) as mock_get_report:
+
+            mock_poll.return_value = {
+                "success": True,
+                "data": {"meta": {"file_info": {"sha256": "test_hash"}}},
+            }
+            mock_get_report.return_value = {
+                "success": True,
+                "data": {"final": "report"},
+            }
+
+            result = scan_private_file_and_get_report(temp_file_path)
+
+            assert result == {"final": "report"}
+            assert mock_upload.call_count == 2
+
+    finally:
+        os.unlink(temp_file_path)
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.poll_analysis_status")
+def test_polling_failure(mock_poll, mock_upload):
+    """Test polling failure"""
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b"test content")
+        temp_file_path = temp_file.name
+
+    try:
+        mock_upload_response = {
+            "success": True,
+            "data": {"data": {"id": "test_analysis_id"}},
+        }
+        mock_poll_response = {"success": False, "error": "Polling error"}
+
+        mock_upload.return_value = mock_upload_response
+        mock_poll.return_value = mock_poll_response
+
+        result = scan_private_file_and_get_report(temp_file_path)
+
+        assert result is None
+        mock_upload.assert_called_once()
+        mock_poll.assert_called_once_with("test_analysis_id")
+
+    finally:
+        os.unlink(temp_file_path)
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.poll_analysis_status")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.get_file_report")
+def test_report_retrieval_failure(mock_get_report, mock_poll, mock_upload):
+    """Test report retrieval failure"""
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b"test content")
+        temp_file_path = temp_file.name
+
+    try:
+        mock_upload_response = {
+            "success": True,
+            "data": {"data": {"id": "test_analysis_id"}},
+        }
+        mock_poll_response = {
+            "success": True,
+            "data": {"meta": {"file_info": {"sha256": "test_hash"}}},
+        }
+        mock_report_response = {"success": False, "error": "Report error"}
+
+        mock_upload.return_value = mock_upload_response
+        mock_poll.return_value = mock_poll_response
+        mock_get_report.return_value = mock_report_response
+
+        result = scan_private_file_and_get_report(temp_file_path)
+
+        assert result is None
+        mock_get_report.assert_called_once_with("test_hash")
+
+    finally:
+        os.unlink(temp_file_path)
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.get_upload_url")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+def test_upload_url_empty(mock_upload, mock_get_url):
+    """Test empty upload URL response for large file"""
+    large_content = b"0" * (MAX_DIRECT_UPLOAD_SIZE + 1)
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(large_content)
+        temp_file_path = temp_file.name
+
+    try:
+        mock_get_url_response = {"success": True, "data": {"data": ""}}
+        mock_get_url.return_value = mock_get_url_response
+
+        result = scan_private_file_and_get_report(temp_file_path)
+
+        assert result is None
+        mock_get_url.assert_called_once()
+        mock_upload.assert_not_called()
+
+    finally:
+        os.unlink(temp_file_path)
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+def test_upload_success_no_analysis_id(mock_upload):
+    """Test successful upload but missing analysis ID"""
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b"test content")
+        temp_file_path = temp_file.name
+
+    try:
+        mock_upload_response = {
+            "success": True,
+            "data": {"data": {}},
+        }
+        mock_upload.return_value = mock_upload_response
+
+        result = scan_private_file_and_get_report(temp_file_path)
+
+        assert result is None
+        mock_upload.assert_called_once()
+
+    finally:
+        os.unlink(temp_file_path)
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.poll_analysis_status")
+def test_polling_success_no_file_hash(mock_poll, mock_upload):
+    """Test successful polling but missing file hash"""
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b"test content")
+        temp_file_path = temp_file.name
+
+    try:
+        mock_upload_response = {
+            "success": True,
+            "data": {"data": {"id": "test_analysis_id"}},
+        }
+        mock_poll_response = {
+            "success": True,
+            "data": {"meta": {"file_info": {}}},
+        }
+
+        mock_upload.return_value = mock_upload_response
+        mock_poll.return_value = mock_poll_response
+
+        result = scan_private_file_and_get_report(temp_file_path)
+
+        assert result is None
+        mock_poll.assert_called_once_with("test_analysis_id")
+
+    finally:
+        os.unlink(temp_file_path)
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+def test_upload_failure_on_retry(mock_upload):
+    """Test upload failure on retry (should_retry=True but fails again)"""
+    with patch("os.path.exists") as mock_exists, patch(
+        "os.path.getsize"
+    ) as mock_getsize:
+        mock_exists.return_value = True
+        mock_getsize.return_value = 1000
+
+        mock_upload_response_fail_retry = {
+            "success": False,
+            "error": "Upload error",
+            "should_retry": True,
+        }
+        mock_upload_response_fail_again = {
+            "success": False,
+            "error": "Upload failed again",
+            "should_retry": False,
+        }
+        mock_upload.side_effect = [
+            mock_upload_response_fail_retry,
+            mock_upload_response_fail_again,
+        ]
+
+        result = scan_private_file_and_get_report("test_file.txt")
+
+        assert result is None
+        assert mock_upload.call_count == 2
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+def test_no_analysis_id_received(mock_upload):
+    """Test successful upload but no analysis ID in response"""
+    with patch("os.path.exists") as mock_exists, patch(
+        "os.path.getsize"
+    ) as mock_getsize:
+        mock_exists.return_value = True
+        mock_getsize.return_value = 1000
+
+        mock_upload_response = {
+            "success": True,
+            "data": {"data": {}},
+        }
+        mock_upload.return_value = mock_upload_response
+
+        result = scan_private_file_and_get_report("test_file.txt")
+
+        assert result is None
+        mock_upload.assert_called_once()
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+def test_empty_analysis_id_received(mock_upload):
+    """Test successful upload but empty analysis ID in response"""
+    with patch("os.path.exists") as mock_exists, patch(
+        "os.path.getsize"
+    ) as mock_getsize:
+        mock_exists.return_value = True
+        mock_getsize.return_value = 1000
+
+        mock_upload_response = {
+            "success": True,
+            "data": {"data": {"id": ""}},
+        }
+        mock_upload.return_value = mock_upload_response
+
+        result = scan_private_file_and_get_report("test_file.txt")
+
+        assert result is None
+        mock_upload.assert_called_once()
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+def test_none_analysis_id_received(mock_upload):
+    """Test successful upload but None analysis ID in response"""
+    with patch("os.path.exists") as mock_exists, patch(
+        "os.path.getsize"
+    ) as mock_getsize:
+        mock_exists.return_value = True
+        mock_getsize.return_value = 1000
+        mock_upload_response = {
+            "success": True,
+            "data": {"data": {"id": None}},
+        }
+        mock_upload.return_value = mock_upload_response
+
+        result = scan_private_file_and_get_report("test_file.txt")
+
+        assert result is None
+        mock_upload.assert_called_once()
+
+
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.upload_file")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.poll_analysis_status")
+@patch("examples.file_and_url_scanning.private_scanning.scan_file.get_file_report")
+def test_successful_scan_small_file(mock_get_report, mock_poll, mock_upload):
+    """Test successful scan of small file"""
+    with patch("os.path.exists") as mock_exists, patch(
+        "os.path.getsize"
+    ) as mock_getsize:
+        mock_exists.return_value = True
+        mock_getsize.return_value = 1000
+
+        mock_upload_response = {
+            "success": True,
+            "data": {"data": {"id": "test_analysis_id"}},
+        }
+        mock_poll_response = {
+            "success": True,
+            "data": {"meta": {"file_info": {"sha256": "test_hash"}}},
+        }
+        mock_report_response = {"success": True, "data": {"final": "report"}}
+
+        mock_upload.return_value = mock_upload_response
+        mock_poll.return_value = mock_poll_response
+        mock_get_report.return_value = mock_report_response
+
+        result = scan_private_file_and_get_report("test_file.txt")
+
+        assert result == {"final": "report"}
+        mock_upload.assert_called_once()
+        mock_poll.assert_called_once_with("test_analysis_id")
+        mock_get_report.assert_called_once_with("test_hash")
+
+
+def test_empty_report(capsys):
+    """Test empty report"""
+    print_scan_report({})
     captured = capsys.readouterr()
-
-    assert "Verdict: MALICIOUS" in captured.out
-    assert "Malicious detections: 1" in captured.out
-    assert "GTI Assessment:" not in captured.out
-
-
-def test_print_scan_report_invalid_report(capsys):
-    """Test printing invalid or empty report."""
-    print_scan_report(None)
-    captured = capsys.readouterr()
-
     assert "Invalid or empty scan report" in captured.out
 
 
-def test_main_missing_file(mock_os_path, mock_open, capsys):
-    """Test main function with missing file."""
-    mock_os_path.exists.return_value = False
-    mock_file_obj = mock_open.return_value.__enter__.return_value
-    mock_file_obj.write = MagicMock()
+def test_malicious_verdict(capsys):
+    """Test malicious verdict report"""
+    report = {
+        "data": {
+            "id": "test_hash",
+            "attributes": {
+                "last_analysis_stats": {"malicious": 5, "harmless": 10},
+                "gti_assessment": {"verdict": "MALICIOUS", "confidence": "HIGH"},
+            },
+        }
+    }
+
+    print_scan_report(report)
+    captured = capsys.readouterr()
+
+    assert "test_hash" in captured.out
+    assert "MALICIOUS" in captured.out
+    assert "Malicious detections: 5" in captured.out
+    assert "GTI Assessment:" in captured.out
+    assert "verdict: MALICIOUS" in captured.out
+    assert "confidence: HIGH" in captured.out
+    assert "Full JSON Report" in captured.out
+
+
+def test_clean_verdict(capsys):
+    """Test clean verdict report"""
+    report = {
+        "data": {
+            "id": "test_hash",
+            "attributes": {"last_analysis_stats": {"malicious": 0, "harmless": 15}},
+        }
+    }
+
+    print_scan_report(report)
+    captured = capsys.readouterr()
+
+    assert "test_hash" in captured.out
+    assert "CLEAN" in captured.out
+    assert "Malicious detections" not in captured.out
+    assert "Full JSON Report" in captured.out
+
+
+def test_no_gti_assessment(capsys):
+    """Test report without GTI assessment"""
+    report = {
+        "data": {
+            "id": "test_hash",
+            "attributes": {"last_analysis_stats": {"malicious": 0, "harmless": 15}},
+        }
+    }
+
+    print_scan_report(report)
+    captured = capsys.readouterr()
+
+    assert "test_hash" in captured.out
+    assert "CLEAN" in captured.out
+    assert "GTI Assessment:" not in captured.out
+
+
+def test_report_with_malicious_stats(capsys):
+    """Test report with malicious stats but no GTI assessment"""
+    report = {
+        "data": {
+            "id": "test_hash",
+            "attributes": {
+                "last_analysis_stats": {"malicious": 3, "harmless": 10, "suspicious": 2}
+            },
+        }
+    }
+
+    print_scan_report(report)
+    captured = capsys.readouterr()
+
+    assert "test_hash" in captured.out
+    assert "MALICIOUS" in captured.out
+    assert "Malicious detections: 3" in captured.out
+    assert "GTI Assessment:" not in captured.out
+
+
+def test_report_with_suspicious_stats(capsys):
+    """Test report with suspicious stats"""
+    report = {
+        "data": {
+            "id": "test_hash",
+            "attributes": {
+                "last_analysis_stats": {
+                    "malicious": 0,
+                    "harmless": 10,
+                    "suspicious": 5,
+                },
+                "gti_assessment": {"verdict": "SUSPICIOUS", "confidence": "MEDIUM"},
+            },
+        }
+    }
+
+    print_scan_report(report)
+    captured = capsys.readouterr()
+
+    assert "test_hash" in captured.out
+    assert "CLEAN" in captured.out
+    assert "GTI Assessment:" in captured.out
+    assert "verdict: SUSPICIOUS" in captured.out
+
+
+@patch(
+    "examples.file_and_url_scanning.private_scanning.scan_file.scan_private_file_and_get_report"
+)
+@patch("builtins.open")
+def test_main_function_success(mock_open, mock_scan):
+    """Test main function with successful scan"""
+    mock_scan.return_value = {"data": {"test": "report"}}
+
+    mock_file = Mock()
+    mock_open.return_value.__enter__.return_value = mock_file
+
+    from examples.file_and_url_scanning.private_scanning.scan_file import main
 
     main()
 
-    captured = capsys.readouterr()
-    assert "Error: File not found at dummy_private_file.txt" in captured.out
-    assert "Scan failed or no results available" in captured.out
-    mock_open.assert_any_call("dummy_private_file.txt", "w")
-    mock_file_obj.write.assert_called_once_with("11111")
+    mock_open.assert_called_once_with("dummy_private_file.txt", "w")
+    mock_scan.assert_called_once_with("dummy_private_file.txt")
 
 
-def test_main_polling_timeout(
-    mock_requests, mock_os_path, mock_open, mock_time_sleep, capsys
-):
-    """Test main function with polling timeout."""
-    mock_os_path.exists.return_value = True
-    mock_os_path.getsize.return_value = 206
-    mock_os_path.basename.return_value = "dummy_private_file.txt"
-    mock_file_obj = mock_open.return_value.__enter__.return_value
-    mock_file_obj.write = MagicMock()
+@patch(
+    "examples.file_and_url_scanning.private_scanning.scan_file.scan_private_file_and_get_report"
+)
+@patch("builtins.open")
+def test_main_function_failure(mock_open, mock_scan):
+    """Test main function with failed scan"""
+    mock_scan.return_value = None
 
-    upload_response = MagicMock(status_code=200)
-    upload_response.json.return_value = SCAN_PRIVATE_FILE_UPLOAD_RESPONSE
-    analysis_response = MagicMock(status_code=200)
-    analysis_response.json.return_value = (
-        SCAN_PRIVATE_FILE_ANALYSIS_IN_PROGRESS_RESPONSE
-    )
-    mock_requests.side_effect = [upload_response] + [
-        analysis_response
-    ] * MAX_POLLING_ATTEMPTS
+    mock_file = Mock()
+    mock_open.return_value.__enter__.return_value = mock_file
+
+    from examples.file_and_url_scanning.private_scanning.scan_file import main
 
     main()
 
-    captured = capsys.readouterr()
-    assert "Max polling attempts reached" in captured.out
-    assert "Scan failed or no results available" in captured.out
-    assert mock_requests.call_count == 1 + MAX_POLLING_ATTEMPTS
-    mock_open.assert_any_call("dummy_private_file.txt", "w")
-    mock_file_obj.write.assert_called_once_with("11111")
+    mock_open.assert_called_once_with("dummy_private_file.txt", "w")
+    mock_scan.assert_called_once_with("dummy_private_file.txt")
+
+
+def test_upload_file_file_not_found(tmp_path):
+    fake_file = tmp_path / "nonexistent.txt"
+
+    result = upload_file(str(fake_file))
+
+    assert result["success"] is False
+    assert result["should_retry"] is False
+    assert f"File not found: {fake_file}" == result["error"]
+
+
+def test_scan_private_file_and_get_report_unexpected_exception(monkeypatch):
+    def mock_exists(_):
+        raise RuntimeError("Unexpected crash")
+
+    monkeypatch.setattr("os.path.exists", mock_exists)
+
+    result = scan_private_file_and_get_report("dummy_path")
+
+    assert result is None

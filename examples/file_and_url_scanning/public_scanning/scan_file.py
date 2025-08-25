@@ -213,7 +213,10 @@ def scan_file_and_get_report(file_path: str) -> Optional[Dict]:
                 print(f"Error getting upload URL: {upload_url_resp['error']}")
                 return None
             upload_url = upload_url_resp['data'].get('data', '')
-
+            if not upload_url:
+                print("Error: Empty upload URL received")
+                return None 
+            
         # Upload file
         print("Uploading file for scanning...")
         upload_result = upload_file(file_path, upload_url)

@@ -129,6 +129,34 @@ def test_make_api_request_500_server_error(mock_requests_get):
     assert result["should_retry"] is True
 
 
+def test_make_api_request_unexpected_http_status(mock_requests_get):
+    """Test API request with 500 Server Error."""
+    mock_response = MagicMock(status_code=900)
+    mock_requests_get.return_value = mock_response
+
+    params = {"size": 100}
+    url = f"{BASE_URL}/dtm/alerts"
+    result = make_api_request(url, params=params)
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected HTTP status: 900"
+    assert result["status_code"] == 900
+    assert result["should_retry"] is False
+
+
+def test_make_api_unexpected_error(mock_requests_get):
+    """Test API request with connection error."""
+    mock_requests_get.side_effect = Exception("Unexpected error")
+
+    params = {"size": 100}
+    url = f"{BASE_URL}/dtm/alerts"
+    result = make_api_request(url, params=params)
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected error: Unexpected error"
+    assert result["should_retry"] is False
+
+
 def test_make_api_request_timeout(mock_requests_get):
     """Test API request with timeout."""
     mock_requests_get.side_effect = requests.exceptions.Timeout
@@ -279,7 +307,7 @@ def test_print_dtm_results_failed_request(capsys):
 
 def test_print_dtm_results_formatting_error(capsys):
     """Test printing with formatting error."""
-    response = {"success": True, "data": None} 
+    response = {"success": True, "data": None}
     result = print_dtm_results(response)
     captured = capsys.readouterr()
 

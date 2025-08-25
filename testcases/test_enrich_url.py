@@ -11,7 +11,6 @@ from examples.automatic_and_manual_enrichment.enrich_url import (
     CACHE_DIR,
     BASE_URL,
 )
-
 from testcases.constants import (
     RELATIONSHIP_URL,
     RELATIONSHIP_URL_ID,
@@ -158,6 +157,30 @@ def test_make_api_request_500_server_error(mock_requests_get):
     assert result["should_retry"] is True
 
 
+def test_make_api_request_unexpected_http_status(mock_requests_get):
+    """Test API request with 500 Server Error."""
+    mock_response = MagicMock(status_code=900)
+    mock_requests_get.return_value = mock_response
+
+    result = make_api_request(f"{BASE_URL}/urls/{RELATIONSHIP_URL_ID}")
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected HTTP status: 900"
+    assert result["status_code"] == 900
+    assert result["should_retry"] is False
+
+
+def test_make_api_unexpected_error(mock_requests_get):
+    """Test API request with connection error."""
+    mock_requests_get.side_effect = Exception("Unexpected error")
+
+    result = make_api_request(f"{BASE_URL}/urls/{RELATIONSHIP_URL_ID}")
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected error: Unexpected error"
+    assert result["should_retry"] is False
+
+
 def test_make_api_request_timeout(mock_requests_get):
     """Test API request with timeout."""
     mock_requests_get.side_effect = requests.exceptions.Timeout
@@ -299,7 +322,7 @@ def test_get_url_report_no_cache_cache_write_error(
 
 def test_get_url_report_invalid_url():
     """Test URL report with invalid URL encoding."""
-    invalid_url = "\ud800"  
+    invalid_url = "\ud800"
     result = get_url_report(invalid_url)
 
     assert result["success"] is False
@@ -331,7 +354,7 @@ def test_print_url_report_failed_request(capsys):
     )
     captured = capsys.readouterr()
 
-    assert result is None  
+    assert result is None
     assert f"Error fetching report for {RELATIONSHIP_URL}: API error" in captured.out
     assert "Note: This request might succeed if retried later." in captured.out
 
@@ -341,9 +364,9 @@ def test_print_url_report_no_data(capsys):
     result = print_url_report({"success": True, "data": {}}, RELATIONSHIP_URL)
     captured = capsys.readouterr()
 
-    assert result is None 
+    assert result is None
     assert f"URL Threat Intelligence Report for {RELATIONSHIP_URL}" in captured.out
-    assert "Verdict: CLEAN" in captured.out 
+    assert "Verdict: CLEAN" in captured.out
 
 
 def test_print_url_report_processing_error(capsys):
@@ -351,7 +374,7 @@ def test_print_url_report_processing_error(capsys):
     result = print_url_report({"success": True, "data": None}, RELATIONSHIP_URL)
     captured = capsys.readouterr()
 
-    assert result is None  
+    assert result is None
     assert f"Error processing report" in captured.out
 
 
@@ -364,7 +387,7 @@ def test_print_url_report_malicious(capsys):
     )
     captured = capsys.readouterr()
 
-    assert result is None 
+    assert result is None
     assert f"URL Threat Intelligence Report for {RELATIONSHIP_URL}" in captured.out
     assert "Verdict: MALICIOUS" in captured.out
     assert "Malicious detections: 5" in captured.out

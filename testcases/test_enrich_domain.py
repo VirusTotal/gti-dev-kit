@@ -96,6 +96,32 @@ def test_make_api_request_401_unauthorized(mock_requests_get):
     assert result["should_retry"] is False
 
 
+def test_make_api_request_403_unauthorized(mock_requests_get):
+    """Test API request with 403 Unauthorized."""
+    mock_response = MagicMock(status_code=403)
+    mock_requests_get.return_value = mock_response
+
+    result = make_api_request(f"{BASE_URL}/domains/{DOMAIN}")
+
+    assert result["success"] is False
+    assert result["error"] == "Forbidden - insufficient permissions"
+    assert result["status_code"] == 403
+    assert result["should_retry"] is False
+
+
+def test_make_api_request_404_unauthorized(mock_requests_get):
+    """Test API request with 404 Unauthorized."""
+    mock_response = MagicMock(status_code=404)
+    mock_requests_get.return_value = mock_response
+
+    result = make_api_request(f"{BASE_URL}/domains/{DOMAIN}")
+
+    assert result["success"] is False
+    assert result["error"] == "Resource not found"
+    assert result["status_code"] == 404
+    assert result["should_retry"] is False
+
+
 def test_make_api_request_429_rate_limit(mock_requests_get):
     """Test API request with 429 Rate Limit Exceeded."""
     mock_response = MagicMock(status_code=429)
@@ -122,6 +148,19 @@ def test_make_api_request_500_server_error(mock_requests_get):
     assert result["should_retry"] is True
 
 
+def test_make_api_request_unexpected_http_status(mock_requests_get):
+    """Test API request with 500 Server Error."""
+    mock_response = MagicMock(status_code=900)
+    mock_requests_get.return_value = mock_response
+
+    result = make_api_request(f"{BASE_URL}/domains/{DOMAIN}")
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected HTTP status: 900"
+    assert result["status_code"] == 900
+    assert result["should_retry"] is False
+
+
 def test_make_api_request_timeout(mock_requests_get):
     """Test API request with timeout."""
     mock_requests_get.side_effect = requests.exceptions.Timeout
@@ -131,6 +170,19 @@ def test_make_api_request_timeout(mock_requests_get):
     assert result["success"] is False
     assert result["error"] == "Request timed out"
     assert result["should_retry"] is True
+
+
+def test_make_api_request_unexpected_error(mock_requests_get):
+    """Test API request with unexpected error."""
+    mock_requests_get.side_effect = requests.exceptions.RequestException(
+        "Unexpected error"
+    )
+
+    result = make_api_request(f"{BASE_URL}/domains/{DOMAIN}")
+
+    assert result["success"] is False
+    assert result["error"] == "Request failed: Unexpected error"
+    assert result["should_retry"] is False
 
 
 def test_make_api_request_connection_error(mock_requests_get):
@@ -155,6 +207,17 @@ def test_make_api_request_json_decode_error(mock_requests_get):
     assert result["success"] is False
     assert result["error"] == "Failed to parse JSON response: Invalid JSON"
     assert result["status_code"] == 200
+    assert result["should_retry"] is False
+
+
+def test_make_api_unexpected_error(mock_requests_get):
+    """Test API request with connection error."""
+    mock_requests_get.side_effect = Exception("Unexpected error")
+
+    result = make_api_request(f"{BASE_URL}/domains/{DOMAIN}")
+
+    assert result["success"] is False
+    assert result["error"] == "Unexpected error: Unexpected error"
     assert result["should_retry"] is False
 
 
@@ -281,6 +344,18 @@ def test_print_domain_report_invalid_data(capsys):
     captured = capsys.readouterr()
 
     assert "No GTI assessment available" in captured.out
+
+
+def test_print_domain_report_exception(capsys):
+    bad_report = {"success": True, "data": "this_should_be_a_dict"}
+
+    print_domain_report(bad_report, "example.com")
+
+    captured = capsys.readouterr()
+
+    assert "Error processing report for example.com:" in captured.out
+
+    assert "'str' object has no attribute 'get'" in captured.out
 
 
 def test_main_retry_logic(mock_os_path_exists, mock_requests_get, capsys):

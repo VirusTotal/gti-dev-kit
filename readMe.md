@@ -83,6 +83,7 @@ For detailed instructions on each module, refer to the respective README.md file
 - `/example/GTI Widget/README.md`: Guide for embedding VirusTotal Augment Widgets.
 - `/example/ASM/README.md`: Instructions for managing attack surface issues.
 - `/example/DTM/README.md`: Steps for monitoring digital threats with DTM alerts.
+- `/testcases`: Contains test cases to validate GTI Dev Kit script functionality, ensuring reliability and accuracy of enrichment, ingestion, scanning, retrieval, and intelligence features, using pytest and mock objects for API and file operation simulation.
 
 ## Best Practices
 
