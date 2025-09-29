@@ -1,127 +1,269 @@
-# Google Threat Intelligence (GTI) Integration Scripts and Workflows
+# **Google Threat Intelligence (GTI) Example Integration Scripts**
 
-This repository contains a comprehensive collection of Python scripts and workflows designed to integrate Google Threat Intelligence (GTI) with various security platforms, including Security Orchestration, Automation, and Response (SOAR) systems and Security Information and Event Management (SIEM) platforms. These resources empower security analysts, incident responders, and threat researchers to automate threat intelligence tasks, streamline security operations, and proactively manage risks by leveraging GTI's extensive threat data for actionable insights.
+Google Threat Intelligence (GTI) unifies crowdsourced intelligence from VirusTotal and curated intelligence from Mandiant with Google's infrastructure to deliver unparalleled threat visibility. This repository is a curated collection of Python scripts and workflows designed to help you build capable and functional integrations with the GTI API. Each module includes detailed descriptions, examples, and sample responses to get you started.
 
-## Overview
+## **Overview**
 
-The repository provides modular scripts and workflows for key GTI functionalities, including Attack Surface Management (ASM), Digital Threat Monitoring (DTM), File and URL Scanning, Vulnerability Intelligence, Threat List and IOC Stream Ingestion, Manual and Automatic Enrichment, and Widget Embedding. Each module is crafted to interface seamlessly with the GTI API, featuring robust error handling, structured JSON outputs, and detailed documentation to ensure smooth integration with security platforms. The goal is to reduce manual intervention, enhance response times, and provide security teams with a unified view of their threat landscape.
+The scripts in this repository are designed to be modular and easy to use, providing a clear path for integrating GTI's capabilities. Each script includes robust error handling and generates structured JSON outputs, making them simple to integrate into your existing security platforms. The primary goal is to reduce manual work, speed up response times, and provide a unified view of your threat landscape.
 
-## Repository Structure
+### **Where to Start**
 
-The repository is organized into the following directories, each containing specific scripts or workflows with their respective `README.md` files for detailed instructions:
+A typical integration journey begins with **manual IOC enrichment**, using scripts to look up indicators like IPs, domains, and file hashes. This can evolve into **automated enrichment** that typically leveraged in integrations with SIEM’s, and from there, expand to ingesting higher-level intelligence objects for a more comprehensive threat picture and further use cases depending on the implemented scenario. Each example section this repo provides may contain an extra README with additional information. For further reading, please refer to the [GTI API documentation portal](https://gtidocs.virustotal.com/reference/api-overview).
 
-- `/docs`: Contains troubleshooting guides (`troubleshooting.md`) for common issues like API errors, rate limits, or configuration problems.
-- `/example`: Core modules with scripts and workflows:
-    - **Automatic and Manual Enrichment**: Scripts for enriching Indicators of Compromise (IOCs) such as IPs, domains, URLs, and file hashes with GTI data, supporting both manual and automated workflows.
-    - **File and URL Scanning**: Scripts for private and public scanning of files and URLs, including polling for analysis completion and detailed report retrieval.
-    - **Vulnerability Intelligence**: Script for retrieving curated CVE data, risk ratings, exploitation trends, and threat actor associations.
-    - **Threat List and IOC Stream Ingestion**: Scripts for fetching curated threat lists and real-time IOC streams for watchlists, blocklists, and detection rules.
-    - **Workflow/Playbook**: Example workflows for SOAR platforms, including a sample for fetching IOC stream notifications with webhook integration.
-    - **GTI Widget**: Script for embedding VirusTotal Augment Widgets to visualize IOC threat context interactively.
-    - **ASM**: Scripts for retrieving and polling Attack Surface Management issues to identify vulnerabilities, misconfigurations, and exposed assets.
-    - **DTM**: Scripts for fetching and polling Digital Threat Monitoring alerts to track threats like phishing campaigns, brand impersonation, or data leaks.
+For building compatible Google TI integrations, this README **contains important information on requirements for integrations and an FAQ**. 
 
-- `requirements.txt`: Lists Python dependencies required to run the scripts.
+All API requests **must include the x-tool header to identify the integration**, following the **org.productName.majorversion.minorversion format**, see below on the x-tool and other headers.
 
-## Key Features
+### **Covered Use Cases**
 
-- **Comprehensive Automation**: Automates repetitive tasks such as IOC enrichment, file scanning, alert ingestion, and vulnerability prioritization to minimize manual effort.
-- **GTI Data Integration**: Leverages GTI's rich threat intelligence for critical use cases like threat hunting, incident response, vulnerability management, and attack surface monitoring.
-- **Out-of-the-Box Solutions**: Provides ready-to-use scripts with clear documentation for rapid deployment and customization.
-- **Robust Error Handling**: Includes retry logic for HTTP 429 (rate limit) and 5xx errors, ensuring reliable operation under varying conditions.
-- **Customizable Outputs**: Generates structured JSON outputs, easily integrated with SIEMs, SOARs, or custom dashboards for further analysis.
-- **User Experience Optimization**: Features intuitive script designs with clear naming, logical grouping, and detailed comments for ease of use and discoverability.
-- **Scalability**: Supports pagination and efficient data handling for large datasets, ensuring performance in high-volume environments.
-- **Cross-Platform Compatibility**: Designed to integrate with various platforms, including Splunk SOAR, IBM SOAR, Rapid7 InsightConnect, and other security tools.
+This repository covers the following key use cases:
+
+* **IOC Enrichment**: Manually or automatically enrich indicators of compromise to gain immediate context during investigations.  
+* **File and URL Scanning**: Submit suspicious files and URLs for in-depth static and dynamic analysis.  
+* **Curated Threat List & IOC Stream Ingestion**: Pull curated threat lists and real-time IOC streams to feed watchlists and detection rules.  
+* **Vulnerability Intelligence**: Retrieve detailed information on CVEs, including risk ratings and associated threat actor activity, to prioritize patching.  
+* **Attack Surface Management (ASM)**: Ingest ASM issues to identify misconfigurations and exposures.  
+* **Digital Threat Monitoring (DTM)**: Ingest DTM alerts to track external threats like phishing campaigns.  
+* **Workflow Automation Guidance**: Provides general guidance and examples on how to build automated playbooks in SOAR platforms.  
+* **Interactive Visualization**: Embed the GTI Widget to provide analysts with rich, interactive threat context directly within your security platforms.
+
+## **Repository Structure**
+
+The repository is organized into the following main directories:
+
+* /docs: Contains additional docs and guidance materials for working with the GTI API.  
+* /example: Contains all the core scripts and workflows, categorized by function. Note that subdirectories may contain their own README.md files with more detailed instructions on the related functionality.  
+* /testcases: Pytest files for validating script functionality.  
+* GTI Dev Kit\_Postman Collection.json: a Postman collection of requests to GTI API referenced in this repo.  
+* requirements.txt: A list of required Python dependencies.
+
+## **Best Practices and Usage Guidelines**
+
+* **API Key Security**: Always use environment variables or a secrets management system (like Google Secret Manager or HashiCorp Vault) to protect your GTI API key. Never embed it in client-side code.  
+* **Quota Management**: Be mindful of your API quota. You can programmatically check your remaining quota by making a GET request to the /users/{apikey}/overall\_quotas endpoint. Adjust polling intervals in scripts to balance data freshness with API usage.  
+* **Efficient Data Fetching**:  
+  * To reduce the size of API responses for IOCs, use the exclude\_attributes query parameter to filter out unnecessary fields.  
+  * Collection-based endpoints have a limit of 40 objects per call. To work around this, consider using the /intelligence/search endpoint, which has a higher pagination limit of 300 objects.  
+* **Fetching Related Objects**: To get related entities for an object (e.g., malware families for a file), first request the relationship *descriptors* using the relationships query parameter. Then, make a second API call to the specific relationship endpoint (e.g., /files/{hash}/malware\_families) to get the full details. **Note: fetching relationships can consume large amounts of API quota**, it is recommended to monitor the quota usage when fetching the relationships and provide an option to limit the relationships requested.  
+* **Testing**: Always test scripts in a non-production environment before deploying them.
+
+## **Getting Started**
+
+Follow these steps to get the scripts up and running.
+
+### **1\. Prerequisites**
+
+* Python 3.8 or higher.  
+* A valid GTI API key, [this article](https://gtidocs.virustotal.com/docs/google-threat-intelligence-api-keys) explains where to get the key.
+
+### **2\. Installation**
+
+Clone the repository and install the required packages:
+
+git clone \[https://github.com/your-repo/gti-integration-scripts.git\](https://github.com/your-repo/gti-integration-scripts.git)  
+cd gti-integration-scripts  
+pip install \-r requirements.txt
+
+### **3\. Configuration**
+
+In each script you intend to use, configure your GTI API key and a product header.
+
+GTI\_API\_KEY \= "YOUR\_API\_KEY"  
+X\_TOOL\_HEADER \= "YOUR\_PRODUCT\_NAME"
+
+**Note: The X\_TOOL\_HEADER is required for tracking integration usage**, it should follow a org.productName.majorversion.minorversion format.
+
+### **4\. Running a Script**
+
+Navigate to the script's directory and run it using Python. For detailed instructions, refer to the README.md file within each module's directory.
+
+cd example/ASM  
+python ingest\_asm\_issues.py
+
+Each module also includes a markdown file with an example of the script's output (e.g., ingest\_asm\_issues\_output.md).
+
+## **GTI API Reference**
+
+| Use Case | Script | Primary API Endpoint(s) |
+| :---- | :---- | :---- |
+| Domain Enrichment | enrich\_domain.py | GET /api/v3/domains/{domain} |
+| File Enrichment | enrich\_file.py | GET /api/v3/files/{file\_hash} |
+| IP Enrichment | enrich\_ip.py | GET /api/v3/ip\_address/{ip\_address} |
+| URL Enrichment | enrich\_url.py | GET /api/v3/urls/{url\_id} |
+| ASM Ingestion | ingest\_asm\_issues.py | GET /api/v3/asm/search/issues/{search\_string} |
+| DTM Ingestion | ingest\_dtm\_alerts.py | GET /api/v3/dtm/alerts |
+| IOC Stream Ingestion | ingest\_ioc\_stream.py | GET /api/v3/ioc\_stream |
+| Threat List Ingestion | ingest\_threat\_list.py | GET /api/v3/threat\_lists/{category}/latest |
+| Private File Scanning | private\_scanning/scan\_file.py | POST /api/v3/private/files, GET /api/v3/private/analyses/{analysis\_id} |
+| Private URL Scanning | private\_scanning/scan\_url.py | POST /api/v3/private/urls, GET /api/v3/private/analyses/{analysis\_id} |
+| Public File Scanning | public\_scanning/scan\_file.py | POST /api/v3/files, GET /api/v3/analyses/{analysis\_id} |
+| Public URL Scanning | public\_scanning/scan\_url.py | POST /api/v3/urls, GET /api/v3/analyses/{analysis\_id} |
+| GTI Widget | widget.py | GET /widget/url/{ioc} |
+| Vulnerability Intelligence | vulnerability.py | GET /collections |
+
+## **Integration Development Requirements** 
+
+To support and streamline the Google TI integration development by Partners, this section contains requirements Partners should follow while working on integrations.
+
+* Google  will require Partner to set up a specific header as a user-agent  (“x-tool”) under the API request to the Google API identifying the Partner Technology.   The x-tool should be the product organization, product name and version, ie x-tool: org.productName.v1.0
+
+* Partner should only use the Google standard, publicly available API to develop, configure, and set up its Product for the purpose of building an integration for the mutual customer of both parties.
+
+* Partner shall prepare a user interface (UI), acceptable to Google, for the mutual customer to enter their Google Intelligence API keys.  Prior to release of the intelligence connector, Partner agrees to  demonstrate the intel connector and use cases with Google Intel and Google product management to ensure alignment on branding, mapping of data fields and Google API outputs.
+
+* Partner shall prepare a demonstration of the integration for Google Intel tech alliances product team to validate the use cases, branding, and implementation,  Partner shall not release this integration until approved to do so.
 
 
-## Getting Started
+* Partner shall provide a point of contact for their support team for us to refer customers to for the integration connector.
 
-### 1. Install Dependencies
 
-- Ensure **Python 3.8+** is installed on your system.
-- Install required packages by running:
+* GTI Development keys are not to be use for customer demonstrations.  If that is required the partner will need to go through the Google Partner NFR process. 
 
-```bash
-pip install -r requirements.txt
+* No AI / ML usage of GTI Intelligence is allowed unless explicit approval for the use case is sought and approved.
+
+* To enhance security and ensure compliance, access to the Global Threat Intelligence (GTI) APIs is now strictly governed by individual API keys, with all authentication managed directly by GTI. This ensures that each customer's access is uniquely identifiable and billed accurately, as charges are incurred on a per-call basis. Consequently, any system or service that integrates with the GTI APIs must ensure that the end-user's API key is used for every request, and authentication is not proxied or handled by downstream systems.  
+    
+* This policy of direct, user-specific authentication is coupled with stringent data usage and storage requirements. All data retrieved through a customer's API key is for that customer's exclusive use and must be stored in a separate, dedicated data store. The sharing of this data with any other user or entity is explicitly prohibited. This measure is in place to uphold the integrity of the licensing and billing model, which is predicated on individual API call consumption. By mandating isolated data storage, it prevents the unauthorized redistribution or commingling of data, ensuring that each customer is accountable for their own API usage and the associated costs.
+
+## **Integration Development FAQs**
+
+### **Q: Where are the public GTI docs located?** 
+
+**A:**  [https://gtidocs.virustotal.com/](https://gtidocs.virustotal.com/) 
+
+---
+
+### **Q: What is the suggested order of integrations?**
+
+**A:** Most customers initially focus on **IoC (Indicator of Compromise) enrichment**. This provides immediate value by allowing them to get more context on suspicious files, URLs, domains, and IP addresses. After that, a common integration path is to incorporate **Threat Lists** and **IoC Streams** to proactively block threats and stay updated on emerging campaigns.
+
+Then it is recommended that you tackle the higher level objects (Actor, Malware, Campaigns and Reports), as well as integrating with the Threat Profile. 
+
+---
+
+### **Q: How can I use my existing VT integration to quickly build a GTI enrichment integration?**
+
+**A:** You can leverage the same API and simply amend the header to include your ‘x-tool’ name. Then, update your integration to surface the data in the new ‘gti\_assessments’ section of the API response.
+
+---
+
+### **Q: How can I determine the remaining API Quota my customer has?**
+
+**A:** You can programmatically check the remaining [API quota](https://gtidocs.virustotal.com/reference/get-user-overall-quotas) by making a GET request to the `/users/{apikey}/overall_quotas` endpoint. This will return a JSON object detailing the hourly, daily, and monthly API request allowances and the number of requests used.
+
+Alternatively, a user can view their current quota usage in the VirusTotal GUI by navigating to their API key page: [https://www.virustotal.com/gui/my-apikey](https://www.virustotal.com/gui/my-apikey).
+
+---
+
+### **Q: How can I determine which Threat Lists a customer has access to?**
+
+**A:** To see the threat lists a customer is [subscribed](https://gtidocs.virustotal.com/reference/list-provisioned-threat-lists) to, you can make a GET request to the `/v3/threat_lists` endpoint, with the users x-api key. This will return a list of the threat intelligence feeds the user can access.
+
+---
+
+### **Q: Which API serves the threat lists?**
+
+**A:** The Threat Lists are served via the `/threat_lists/{threat_list_id}/iocs` endpoint. You would first get the list of available `threat_list_id`s from the user's subscriptions and then use this endpoint to retrieve the Indicators of Compromise from a specific list.
+
+---
+
+### **Q: How do I configure my system to consume IoC Streams, and how do I filter by origin?**
+
+**A:** The IoC Stream provides a near real-time feed of indicators. You can access it via this [API](https://gtidocs.virustotal.com/reference/get-objects-from-the-ioc-stream)  `/ioc_stream` . The documentation points to the "IoC Stream" view, which centralizes notifications from your active Livehunt (YARA rules) notifications, subscribed collections, and threat actors. You can filter the notifications by various criteria, including the `source`. For example, you can filter by a specific Livehunt ruleset name or a collection name to consume only the IoCs from that origin.
+
+---
+
+### **Q: How do I perform enrichments on an IoC? Provide an example of an IP address.**
+
+**A:** To enrich an IoC, you make a GET request to the appropriate endpoint for that indicator type. For an IP address, the endpoint is `/ip_addresses/{ip}`.
+
+Here's an example of how to enrich the IP address `8.8.8.8`:
+
+**Request:**
+
 ```
-### 2. Configure API Credentials
-
-- Obtain a valid GTI API key from the GTI platform.
-- Configure the API key and product header in each script (e.g., replace `GTI_API_KEY = "YOUR_API_KEY"` and `X_TOOL_HEADER = "YOUR_PRODUCT_NAME"`).
-- Ensure proper configuration to avoid authentication errors during API calls.
-
-### 3. Explore Modules
-
-- Navigate to the desired module directory (e.g., `/example/ASM` or `/example/Workflow-Playbook`).
-- Refer to the module-specific `README.md` for detailed setup, usage, and customization instructions.
-
-### 4. Run Scripts 
-
-- Execute Python scripts from the command line (e.g., python ingest_asm_issues.py).
-- For SOAR workflows, import the provided playbooks into your platform and follow the steps outlined in the respective README.md.
-- Example command for running a script:
-
-```bash
-cd example/ASM
-python ingest_asm_issues.py
+GET /api/v3/ip_addresses/8.8.8.8
+Host: www.virustotal.com
+x-apikey: <Your API Key>
 ```
 
-### 5. Run Scripts 
+**Response:** The API will return a JSON object containing detailed information about the IP address, including reputation, resolutions, related samples, and more.
 
-- Each module includes example outputs in markdown files (e.g., `ingest_asm_issues_output.md`) within its directory, detailing JSON structures and sample results.
-- Outputs can be saved to files (e.g., JSON, CSV) for integration with other systems by modifying the scripts as needed.
+---
 
-## Module-Specific Documentation
-For detailed instructions on each module, refer to the respective README.md files in the following directories:
+### **Q: Known limitations of the API?**
 
-- `/example/Automatic and Manual Enrichment/README.md`: Guides for enriching IOCs with GTI data.
-- `/example/File and URL Scanning/README.md`: Instructions for scanning files and URLs in private or public modes.
-- `/example/Vulnerability Intelligence/README.md`: Details on retrieving and prioritizing CVE data.
-- `/example/Threat List and IOC Stream Ingestion/README.md`: Steps for ingesting threat lists and IOC streams.
-- `/example/Workflow-Playbook/README.md`: Instructions for GTI workflows in SOAR platforms.
-- `/example/GTI Widget/README.md`: Guide for embedding VirusTotal Augment Widgets.
-- `/example/ASM/README.md`: Instructions for managing attack surface issues.
-- `/example/DTM/README.md`: Steps for monitoring digital threats with DTM alerts.
-- `/testcases`: Contains test cases to validate GTI Dev Kit script functionality, ensuring reliability and accuracy of enrichment, ingestion, scanning, retrieval, and intelligence features, using pytest and mock objects for API and file operation simulation.
+**A:** Currently, you can only get a maximum of **40 objects per API call** for collection-based endpoints. Additionally, the public API has a default rate limit of **4 requests per minute**. Private API keys have higher rate limits.
 
-## Best Practices
+---
 
-- **API Key Security**: Store GTI API keys securely (e.g., in environment variables or a secrets manager) to prevent unauthorized access.
-- **Quota Management**: Monitor API usage to stay within GTI quotas, especially for polling scripts. Adjust polling intervals to balance data freshness and quota limits.
-- **Error Logging**: Enable logging in scripts to capture detailed error messages for troubleshooting. Refer to console outputs or create log files as needed.
-- **Customization**: Tailor query parameters, filters, and output formats to align with your organization's specific needs and workflows.
-- **Testing**: Test scripts and workflows in a sandbox environment before deploying to production to ensure compatibility and performance.
-- **Documentation**: Leverage the detailed comments in each script and the module-specific `README.md` files to understand functionality and customization options. 
-- [**Google Threat Intelligence: A Best Practices Guide**](https://docs.google.com/document/d/1foYWa5FnlwtYBIo63YIZU5AOInI7UsNdrn9g0ty25Ag/edit?resourcekey=0-SIeMz9ALACxg0qGd75Jm4g&tab=t.0#heading=h.iu05rh2fex9i)
+### **Q: How do I get related entities to an object through the API?**
 
-## GTI API Reference Table
+**A:** When retrieving a specific object, such as a file, you can discover its related entities by using the `relationships` query parameter. This initial request will return a list of "descriptors" for each related object, which includes its unique ID and type.
 
-| **Use Case**                | **Script**                        | **Primary API Endpoint(s)**                                                                 |
-|-----------------------------|-----------------------------------|---------------------------------------------------------------------------------------------|
-| Domain Enrichment           | `enrich_domain.py`                | `GET /api/v3/domains/{domain}`                                                              |
-| File Enrichment             | `enrich_file.py`                  | `GET /api/v3/files/{file_hash}`,<br>`GET /api/v3/files/{file_hash}/behaviour_mitre_trees`   |
-| IP Enrichment               | `enrich_ip.py`                    | `GET /api/v3/ip_address/{ip_address}`                                                       |
-| URL Enrichment              | `enrich_url.py`                   | `GET /api/v3/urls/{url_id}`                                                                |
-| ASM Ingestion               | `ingest_asm_issues.py`            | `GET /api/v3/asm/search/issues/{search_string}`                                             |
-| DTM Ingestion               | `ingest_dtm_alerts.py`            | `GET /api/v3/dtm/alerts`                                                                   |
-| IOC Stream Ingestion        | `ingest_ioc_stream.py`            | `GET /api/v3/ioc_stream`                                                                   |
-| Threat List Ingestion       | `ingest_threat_list.py`           | `GET /api/v3/threat_lists/{category}/latest`                                                |
-| Private File Scanning       | `private_scanning/scan_file.py`   | `POST /api/v3/private/files`,<br>`GET /api/v3/private/analyses/{analysis_id}`,<br>`GET /api/v3/private/files/{file_hash}` |
-| Private URL Scanning        | `private_scanning/scan_url.py`    | `POST /api/v3/private/urls`,<br>`GET /api/v3/private/analyses/{analysis_id}`,<br>`GET /api/v3/private/urls/{url_id}` |
-| Public File Scanning        | `public_scanning/scan_file.py`    | `POST /api/v3/files`,<br>`GET /api/v3/analyses/{analysis_id}`,<br>`GET /api/v3/files/{file_hash}` |
-| Public URL Scanning         | `public_scanning/scan_url.py`     | `POST /api/v3/urls`,<br>`GET /api/v3/analyses/{analysis_id}`,<br>`GET /api/v3/urls/{url_id}` |
-| GTI Widget                  | `widget.py`                       | `GET /widget/url/{ioc}`                                                              |
-| Vulnerability Intelligence  | `vulnerability.py`                | `GET /collections`                                                              |
+For example, to get the malware families and related threat actors for a specific file hash, your API call would look like this:
 
+Request for descriptors:
 
-## Additional Notes
+```
+GET /api/v3/files/8cc57bc1284f68b2aae1e6cb8fa86793db131e9bbbfb40b5eb235a0628c57da9?relationships=malware_families,related_threat_actors
+Host: www.virustotal.com
+x-apikey: <Your API Key>
+```
 
-- **API Quota Management**: All scripts include retry logic for HTTP 429 (rate limit) and 5xx errors. Monitor API usage to stay within your GTI quota, particularly for polling scripts or high-frequency queries.
-- **Error Handling**: Scripts handle network failures, invalid responses, and parsing errors, providing clear feedback and retry suggestions. Check console output for detailed error information.
-- **Output Storage**: By default, outputs are printed to the console. Modify scripts to save data to files (e.g., JSON, CSV) or integrate directly with SIEMs, SOARs, or databases.
-- **GTI API Documentation**: Refer to the official GTI Documentation for endpoint details, query syntax, and API limitations.
-- **Troubleshooting**: Consult `/docs/troubleshooting.md` for help with common issues like API errors, rate limits, or invalid inputs. Create additional troubleshooting guides as needed.
-- **Integration Tips**: Use script outputs to create incidents, update asset inventories, or trigger alerts in your security platform. Leverage webhooks or API endpoints to sync data back to GTI (e.g., for status updates).
-- **Widget Customization**: For GTI Widget integration, adjust parameters like colors (`bd1`, `bg1`, `bg2`, `fg1`) to match your platform’s theme for a seamless user experience.
-- **Performance Optimization**: For high-volume data (e.g., threat lists or IOC streams), use pagination and incremental fetching to minimize processing overhead and conserve API quota.
+To obtain the full, detailed information for those related entities, you must then make additional API calls to the specific relationship endpoints. For example, to get the full details for the malware families related to the file, you would make the following call:
+
+Request for full relationship details:
+
+```
+GET /api/v3/files/8cc57bc1284f68b2aae1e6cb8fa86793db131e9bbbfb40b5eb235a0628c57da9/malware_families
+Host: www.virustotal.com
+x-apikey: <Your API Key>
+```
+
+---
+
+### **Q: How do I download yara rules associated with a malware family?** 
+
+**A**:  you can get the ruleset for a family by doing:
+
+You can do is check any malware family / tool with the following query:  
+curl \--request GET \\  
+     \--url [https://www.virustotal.com/api/v3/collections/\[COLLECTION\_ID\]/hunting\_rulesets](https://www.virustotal.com/api/v3/collections/[COLLECTION_ID]/hunting_rulesets) \\  
+     \--header 'accept: application/json' \\  
+     \--header 'x-apikey: xxx'  
+this will return the curated rules
+
+ you can use this to specifically get Toolkits:  
+You can do with the following endpoint: [https://gtidocs.virustotal.com/reference/intelligence-search](https://gtidocs.virustotal.com/reference/intelligence-search)
+
+and the following modifier: "entity:collection collection\_type:software-toolkit"
+
+that would be an example: curl \--request GET \\  
+     \--url '[https://www.virustotal.com/api/v3/intelligence/search?query=entity%3Acollection%20collection\_type%3Asoftware-toolkit](https://www.virustotal.com/api/v3/intelligence/search?query=entity%3Acollection%20collection_type%3Asoftware-toolkit)' \\  
+     \--header 'accept: application/json' \\  
+     \--header 'x-apikey: xxx'
+
+---
+
+### **Q: How do I reduce the number of fields returned by the API for IoCs?** 
+
+**A**:  You can do this by using the exclude\_attributes query parameter. This allows you to specify and exclude certain fields from the API response, which should significantly improve efficiency. 
+
+For example, you can use it like this: https://www.virustotal.com/api/v3/files/91e359e98df513ef6ce1fad21ddb8cea02eee0339c77a6dcf7d2e2ea451b4bd1?exclude\_attributes=last\_analysis\_results,sigma\_analysis\_summary,sigma\_analysis\_results,names,signature\_info,pe\_info,sigma\_analysis\_stats,exiftool,crowdsourced\_ids\_results,detectiteasy
+
+---
+
+### **Q: How can I avoid the 40 item limit in the collections API?** 
+
+**A**:  In order to mitigate the quota consumption you can replace the '[https://www.virustotal.com/api/v3/collections](https://www.virustotal.com/api/v3/collections)' endpoint by the '[https://www.virustotal.com/api/v3/intelligence/search](https://www.virustotal.com/api/v3/intelligence/search)'  endpoint, the main advantage is the pagination limit is 300 instead of 40, but you are still required to request for the relationships objects if you need them.
+
+Using the intelligence endpoint requires some changes to the filter you use, for instance, you have to use the **collection** type filter, your query should start with something like **`` 'collection_type:vulnerability entity:collection` ``**
+
+Note: the `exclude_attributes` query parameter also works on the v3/intelligence/search endpoint. 
+
+## **Additional Resources**
+
+* **GTI Documentation Hub**: [https://gtidocs.virustotal.com/](https://gtidocs.virustotal.com/)  
+* **GTI API Reference**: [https://gtidocs.virustotal.com/reference/api-overview](https://gtidocs.virustotal.com/reference/api-overview)  
+* **Google Cloud Security Community**: [https://www.googlecloudcommunity.com](https://www.googlecloudcommunity.com)
