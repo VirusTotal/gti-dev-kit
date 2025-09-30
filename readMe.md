@@ -31,7 +31,7 @@ This repository covers the following key use cases:
 
 The repository is organized into the following main directories:
 
-* /docs: Contains additional docs and guidance materials for working with the GTI API.  
+* /docs: Contains additional docs and guidance materials for working with the GTI API, and a Postman collection of a sample requests for enrichment, files scanning and other use cases referenced in this repo.    
 * /example: Contains all the core scripts and workflows, categorized by function. Note that subdirectories may contain their own README.md files with more detailed instructions on the related functionality.  
 * /testcases: Pytest files for validating script functionality.  
 * GTI Dev Kit\_Postman Collection.json: a Postman collection of requests to GTI API referenced in this repo.  
