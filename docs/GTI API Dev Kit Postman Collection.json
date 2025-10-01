@@ -319,13 +319,12 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseURL}}/widget/url?query={{ip_address}}",
+							"raw": "{{baseURL}}/gtiwidget?query={{ip_address}}",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
-								"widget",
-								"url"
+								"gtiwidget"
 							],
 							"query": [
 								{
@@ -349,13 +348,12 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseURL}}/widget/url?query={{domain}}",
+							"raw": "{{baseURL}}/gtiwidget?query={{domain}}",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
-								"widget",
-								"url"
+								"gtiwidget"
 							],
 							"query": [
 								{
@@ -379,13 +377,12 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseURL}}/widget/url?query={{url}}",
+							"raw": "{{baseURL}}/gtiwidget?query={{url}}",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
-								"widget",
-								"url"
+								"gtiwidget"
 							],
 							"query": [
 								{
@@ -409,13 +406,12 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseURL}}/widget/url?query={{file_hash}}",
+							"raw": "{{baseURL}}/gtiwidget?query={{file_hash}}",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
-								"widget",
-								"url"
+								"gtiwidget"
 							],
 							"query": [
 								{

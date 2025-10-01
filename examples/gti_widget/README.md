@@ -19,7 +19,7 @@ The `widget.py` script streamlines the retrieval of GTI Augment Widget URLs, whi
 
 - **Relevant API Calls**:  
     
-  - `/widget/url`: Fetches the embed-ready URL for the GTI Augment Widget for a specified observable (e.g., IP, domain, URL, or file hash).
+  - `/gtiwidget`: Fetches the embed-ready URL for the GTI Augment Widget for a specified observable (e.g., IP, domain, URL, or file hash).
 
 
 - **User Experience (UX) Best Practice**:  
@@ -51,18 +51,17 @@ The repository includes the following script, tailored to retrieve and display G
 
 #### **`widget.py`**
 
-- **Purpose**: Retrieves a GTI Augment Widget URL for a given observable (IP, domain, URL, or file hash) using the GTI API, displaying the widget URL and detection ratio.  
+- **Purpose**: Retrieves a GTI Augment Widget URL for a given observable (IP, domain, URL, or file hash) using the GTI API, displaying the widget URL.  
     
 - **Key Features**:  
     
-  - **Widget URL Retrieval**: Fetches the embed-ready URL for the GTI Augment widget.  
-  - **Detection Summary**: Displays detection count from reputable AV engines.  
+  - **Widget URL Retrieval**: Fetches the embed-ready URL for the GTI Augment widget.
   - **Error Handling**: Provides detailed status feedback and retry suggestions for transient failures (e.g., rate limits, server errors).
 
 
 - **API Endpoints Used**:  
     
-  - `/widget/url`: Fetches the embeddable widget URL for a specified observable.
+  - `/gtiwidget`: Fetches the embeddable widget URL for a specified observable.
 
 
 - **Use Case**: Embedding interactive threat intelligence visualizations in security platforms for IOC enrichment, incident investigation, or threat analysis.
