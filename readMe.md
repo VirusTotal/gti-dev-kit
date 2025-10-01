@@ -97,7 +97,7 @@ Each module also includes a markdown file with an example of the script's output
 | Private URL Scanning | private\_scanning/scan\_url.py | POST /api/v3/private/urls, GET /api/v3/private/analyses/{analysis\_id} |
 | Public File Scanning | public\_scanning/scan\_file.py | POST /api/v3/files, GET /api/v3/analyses/{analysis\_id} |
 | Public URL Scanning | public\_scanning/scan\_url.py | POST /api/v3/urls, GET /api/v3/analyses/{analysis\_id} |
-| GTI Widget | widget.py | GET /widget/url/{ioc} |
+| GTI Widget | widget.py | GET /gtiwidget?query={ioc} |
 | Vulnerability Intelligence | vulnerability.py | GET /collections |
 
 ## **Integration Development Requirements** 

@@ -983,13 +983,12 @@ VULNERABILITY_API_RESPONSE = {
 }
 
 GTI_WIDGET_API_RESPONSE = {
-    "data": {
-        "id": "1.1.1.1",
-        "url": "https://www.virustotal.com/ui/widget/html/MS4xLjEuMXx8aXBfYWRkcmVzc3x8eyJiZDEiOiAiIzRkNjM4NSIsICJiZzEiOiAiIzMxM2Q1YSIsICJiZzIiOiAiIzIyMmM0MiIsICJmZzEiOiAiI2ZmZmZmZiIsICJ0eXBlIjogImRlZmF1bHQifXx8ZnVsbHx8Zm91bmR8fHYzfHwxNzU1MDk3MzI4fHw2YWJhMTQxYjYyYWI5MmM3YmUxNjIzZTdhYjE2NzhjNDA1MTlhOTY0MTI5N2U2ZjA3NmU2MzI2MTFmYTM5Mjdk",
-        "detection_ratio": {"detections": 0, "total": 94},
-        "type": "ip_address",
-        "found": True,
-    }
+  "data": {
+    "id": "1.1.1.1",
+    "type": "ip_address",
+    "url": "https://www.virustotal.com/gtiwidget/ABMXx8MS4xLjEuMXx8aXBfYWRkcmVzc3x8djN8fDE3NTkyOTQxNTN8fGUxMzE0Y2VmNWJlMTRhNjMzN2I5NzJlNjJkNGFlNDg3M2YxZWJlYTgxZmYyNzZkOTYwMDFjYmRhYWZkMzkyMjg",
+    "found": bool(True)
+  }
 }
 
 DOMAIN = "example.com"

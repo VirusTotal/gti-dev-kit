@@ -1,17 +1,16 @@
 # ======================================================================================================
-# This script retrieves a VirusTotal Augment Widget rendering URL for a given observable (IP, domain,
+# This script retrieves a GTI Augment Widget rendering URL for a given observable (IP, domain,
 # URL, or file hash) using the Google Threat Intelligence (GTI) API. The widget allows analysts to embed
 # a live, interactive visualization of the observable’s threat context within other platforms.
 #
 # Output Summary:
 # - Embeddable widget URL for threat visualization
-# - Detection ratio (e.g., 12 / 92) from contributing engines
 # - Contextual messaging in case of failure, including retry suggestions
 #
 # Usage:
 # Set your GTI API key and product name in the `GTI_API_KEY` and `X_TOOL_HEADER` variables.
 # Replace the default observable in the `main()` function with the IP, domain, URL, or hash you want to query.
-# The script prints a live VT widget link and detection ratio in the console.
+# The script prints a live GTI widget link in the console.
 # ======================================================================================================
 
 import requests
@@ -22,7 +21,7 @@ GTI_API_KEY = "YOUR_API_KEY"
 # Product name for x-tool header (replace with your actual product name)
 X_TOOL_HEADER = "YOUR_PRODUCT_NAME"
 # Base URL for Google Threat Intelligence API
-BASE_URL = "https://www.virustotal.com/api/v3/widget/url"
+BASE_URL = "https://www.virustotal.com/api/v3/gtiwidget"
 
 def make_widget_request(observable: str) -> Dict:
     """
@@ -81,7 +80,7 @@ def make_widget_request(observable: str) -> Dict:
 
 def print_widget_info(response: Dict, observable: str) -> None:
     """
-    Displays the widget URL and detection ratio.
+    Displays the widget URL.
 
     Args:
         response (dict): API response from make_widget_request().
@@ -99,12 +98,6 @@ def print_widget_info(response: Dict, observable: str) -> None:
     print(f"\n=== Widget Info for Observable: {observable} ===")
     print(f"Widget URL       : {data.get('url', 'N/A')}")
     
-    ratio = data.get("detection_ratio", {})
-    detections = ratio.get("detections", 'N/A')
-    total = ratio.get("total", 'N/A')
-
-    print(f"Detection Ratio  : {detections} / {total}")
-
 def main():
     """
     Main function to retrieve widget info for a specific observable.
@@ -112,7 +105,7 @@ def main():
     # Replace with your test observable (IP, URL, domain, or file hash)
     observable = "1.1.1.1"
 
-    print(f"Requesting VT Widget for observable: {observable} ...")
+    print(f"Requesting GTI Widget for observable: {observable} ...")
     response = make_widget_request(observable)
 
     if not response["success"] and response.get("should_retry"):

@@ -175,10 +175,9 @@ def test_print_widget_info_success(capsys):
 
     assert "=== Widget Info for Observable: 1.1.1.1 ===" in captured.out
     assert (
-        "Widget URL       : https://www.virustotal.com/ui/widget/html/MS4xLjEuMXx8aXBfYWRkcmVzc3x8eyJiZDEiOiAiIzRkNjM4NSIsICJiZzEiOiAiIzMxM2Q1YSIsICJiZzIiOiAiIzIyMmM0MiIsICJmZzEiOiAiI2ZmZmZmZiIsICJ0eXBlIjogImRlZmF1bHQifXx8ZnVsbHx8Zm91bmR8fHYzfHwxNzU1MDk3MzI4fHw2YWJhMTQxYjYyYWI5MmM3YmUxNjIzZTdhYjE2NzhjNDA1MTlhOTY0MTI5N2U2ZjA3NmU2MzI2MTFmYTM5Mjdk"
+        "Widget URL       : https://www.virustotal.com/gtiwidget/ABMXx8MS4xLjEuMXx8aXBfYWRkcmVzc3x8djN8fDE3NTkyOTQxNTN8fGUxMzE0Y2VmNWJlMTRhNjMzN2I5NzJlNjJkNGFlNDg3M2YxZWJlYTgxZmYyNzZkOTYwMDFjYmRhYWZkMzkyMjg"
         in captured.out
     )
-    assert "Detection Ratio  : 0 / 94" in captured.out
 
 
 def test_print_widget_info_failed_request(capsys):
@@ -197,30 +196,6 @@ def test_print_widget_info_failed_request(capsys):
     assert "Note: This request might succeed if retried later." in captured.out
 
 
-def test_print_widget_info_missing_ratio_fields(capsys):
-    """Test printing widget info with missing detection ratio fields."""
-    response = {
-        "success": True,
-        "data": {
-            "id": "1.1.1.1",
-            "url": "https://www.virustotal.com/ui/widget/html/test",
-            "detection_ratio": {},
-            "type": "ip_address",
-            "found": True,
-        },
-    }
-    observable = "1.1.1.1"
-    print_widget_info(response, observable)
-    captured = capsys.readouterr()
-
-    assert "=== Widget Info for Observable: 1.1.1.1 ===" in captured.out
-    assert (
-        "Widget URL       : https://www.virustotal.com/ui/widget/html/test"
-        in captured.out
-    )
-    assert "Detection Ratio  : N/A / N/A" in captured.out
-
-
 def test_print_widget_info_empty_data(capsys):
     """Test printing widget info with empty data."""
     response = {"success": True, "data": {}}
@@ -230,7 +205,6 @@ def test_print_widget_info_empty_data(capsys):
 
     assert "=== Widget Info for Observable: 1.1.1.1 ===" in captured.out
     assert "Widget URL       : N/A" in captured.out
-    assert "Detection Ratio  : N/A / N/A" in captured.out
 
 
 def test_main_success(mock_requests_get, capsys):
@@ -244,13 +218,12 @@ def test_main_success(mock_requests_get, capsys):
     main()
 
     captured = capsys.readouterr()
-    assert "Requesting VT Widget for observable: 1.1.1.1 ..." in captured.out
+    assert "Requesting GTI Widget for observable: 1.1.1.1 ..." in captured.out
     assert "=== Widget Info for Observable: 1.1.1.1 ===" in captured.out
     assert (
-        "Widget URL       : https://www.virustotal.com/ui/widget/html/MS4xLjEuMXx8aXBfYWRkcmVzc3x8eyJiZDEiOiAiIzRkNjM4NSIsICJiZzEiOiAiIzMxM2Q1YSIsICJiZzIiOiAiIzIyMmM0MiIsICJmZzEiOiAiI2ZmZmZmZiIsICJ0eXBlIjogImRlZmF1bHQifXx8ZnVsbHx8Zm91bmR8fHYzfHwxNzU1MDk3MzI4fHw2YWJhMTQxYjYyYWI5MmM3YmUxNjIzZTdhYjE2NzhjNDA1MTlhOTY0MTI5N2U2ZjA3NmU2MzI2MTFmYTM5Mjdk"
+        "Widget URL       : https://www.virustotal.com/gtiwidget/ABMXx8MS4xLjEuMXx8aXBfYWRkcmVzc3x8djN8fDE3NTkyOTQxNTN8fGUxMzE0Y2VmNWJlMTRhNjMzN2I5NzJlNjJkNGFlNDg3M2YxZWJlYTgxZmYyNzZkOTYwMDFjYmRhYWZkMzkyMjg"
         in captured.out
     )
-    assert "Detection Ratio  : 0 / 94" in captured.out
     assert mock_requests_get.call_count == 1
 
 
@@ -266,10 +239,9 @@ def test_main_with_retry(mock_requests_get, capsys):
     main()
 
     captured = capsys.readouterr()
-    assert "Requesting VT Widget for observable: 1.1.1.1 ..." in captured.out
+    assert "Requesting GTI Widget for observable: 1.1.1.1 ..." in captured.out
     assert "Retrying after failure..." in captured.out
     assert "=== Widget Info for Observable: 1.1.1.1 ===" in captured.out
-    assert "Detection Ratio  : 0 / 94" in captured.out
     assert mock_requests_get.call_count == 2
 
 
@@ -283,7 +255,7 @@ def test_main_failed_no_retry(mock_requests_get, capsys):
     main()
 
     captured = capsys.readouterr()
-    assert "Requesting VT Widget for observable: 1.1.1.1 ..." in captured.out
+    assert "Requesting GTI Widget for observable: 1.1.1.1 ..." in captured.out
     assert "[!] Failed to retrieve widget for: 1.1.1.1" in captured.out
     assert "Error: Unauthorized - check your API key." in captured.out
     assert "Note: This request might succeed if retried later." not in captured.out
@@ -301,8 +273,7 @@ def test_main_missing_data_fields(mock_requests_get, capsys):
     main()
 
     captured = capsys.readouterr()
-    assert "Requesting VT Widget for observable: 1.1.1.1 ..." in captured.out
+    assert "Requesting GTI Widget for observable: 1.1.1.1 ..." in captured.out
     assert "=== Widget Info for Observable: 1.1.1.1 ===" in captured.out
     assert "Widget URL       : N/A" in captured.out
-    assert "Detection Ratio  : N/A / N/A" in captured.out
     assert mock_requests_get.call_count == 1
